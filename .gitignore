@@ -1,0 +1,8 @@
+/vendor/
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+.kotlin/
+*.h264

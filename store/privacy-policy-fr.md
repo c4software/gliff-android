@@ -1,10 +1,10 @@
-# Politique de confidentialité — gliff pour Android
+# Politique de confidentialité — Gliff Client
 
 Dernière mise à jour : 12 octobre 2026
 
 ## En résumé
 
-gliff pour Android ne collecte rien et ne nous envoie rien. Il n'y a ni
+Gliff Client ne collecte rien et ne nous envoie rien. Il n'y a ni
 serveur à nous, ni compte chez nous, ni mesure d'audience, ni publicité. Les
 seules machines auxquelles l'application parle sont **celles que vous ajoutez
 vous-même**, en SSH.

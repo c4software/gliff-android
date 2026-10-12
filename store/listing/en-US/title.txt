@@ -1,1 +1,1 @@
-gliff for Android
+Gliff Client

@@ -70,7 +70,7 @@ Version shown in the screenshots: commit `e2d3a26`, before any tag
    https://c4software.github.io/gliff-android/privacy-fr.html
    ```
 5. **The name.** "gliff" is the name of someone else's project. The title
-   "gliff for Android" and the closing paragraph of the description say the
+   "Gliff Client" and the closing paragraph of the description say the
    app is an independent client, which is the usual way to stay within
    Play's impersonation policy; asking the author of gliff first would be
    courteous, and would settle it.
@@ -80,7 +80,7 @@ Version shown in the screenshots: commit `e2d3a26`, before any tag
 
 ## Order of entry in the Play Console
 
-1. **Create the app**: name `gliff for Android`, default language *English
+1. **Create the app**: name `Gliff Client`, default language *English
    (United States)*, an app (not a game), free, category *Tools*.
 2. **Main store listing** (en-US): title, descriptions, icon, feature
    graphic, screenshots. Then add the **fr-FR** translation.

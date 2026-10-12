@@ -1,4 +1,4 @@
-gliff for Android is a remote desktop client for the user's own Linux computer (Hyprland with gliff-server), reached over SSH with a key the app creates on the device. There is no account and no password. A demonstration machine is provided for this review; it accepts any device.
+Gliff Client is a remote desktop client for the user's own Linux computer (Hyprland with gliff-server), reached over SSH with a key the app creates on the device. There is no account and no password. A demonstration machine is provided for this review; it accepts any device.
 
 1. Tap "Add machine".
 2. Address: demo@HOST:2222

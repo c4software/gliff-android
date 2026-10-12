@@ -1,4 +1,4 @@
-gliff pour Android affiche sur votre téléphone ou votre tablette le bureau Hyprland de votre propre machine Linux, et vous permet de le piloter. C'est un client pour gliff, le bureau à distance libre pour Hyprland : l'image et vos saisies passent par une simple connexion SSH, vers une machine qui vous appartient.
+Gliff Client affiche sur votre téléphone ou votre tablette le bureau Hyprland de votre propre machine Linux, et vous permet de le piloter. C'est un client pour gliff, le bureau à distance libre pour Hyprland : l'image et vos saisies passent par une simple connexion SSH, vers une machine qui vous appartient.
 
 L'application ne fait rien seule. Il faut une machine Linux sous Hyprland, avec gliff-server installé, joignable en SSH. Il n'y a ni compte, ni relais, ni service en ligne entre les deux.
 

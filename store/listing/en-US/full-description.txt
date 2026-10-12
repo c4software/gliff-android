@@ -1,4 +1,4 @@
-gliff for Android shows the Hyprland desktop of your own Linux machine on your phone or tablet, and lets you drive it. It is a client for gliff, the open-source remote desktop for Hyprland: the picture and your input travel through a plain SSH connection, to a machine you own.
+Gliff Client shows the Hyprland desktop of your own Linux machine on your phone or tablet, and lets you drive it. It is a client for gliff, the open-source remote desktop for Hyprland: the picture and your input travel through a plain SSH connection, to a machine you own.
 
 It does nothing on its own. You need a Linux machine running Hyprland with gliff-server installed, reachable over SSH. There is no account, no relay and no cloud service in between.
 

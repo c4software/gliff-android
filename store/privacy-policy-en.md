@@ -1,10 +1,10 @@
-# Privacy Policy — gliff for Android
+# Privacy Policy — Gliff Client
 
 Last updated: 12 October 2026
 
 ## Summary
 
-gliff for Android collects nothing and sends nothing to us. It has no server
+Gliff Client collects nothing and sends nothing to us. It has no server
 of ours, no account of ours, no analytics and no advertising. The only
 machines it talks to are **the ones you add yourself**, over SSH.
 

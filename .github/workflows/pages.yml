@@ -72,7 +72,7 @@ jobs:
               <link rel="stylesheet" href="style.css">
             </head>
             <body>
-          <nav><a href="index.html">&#8592; gliff for Android</a></nav>
+          <nav><a href="index.html">&#8592; Gliff Client</a></nav>
           {body}
             </body>
           </html>
@@ -80,9 +80,9 @@ jobs:
 
           pages = [
               ("store/privacy-policy-en.md", "en",
-               "Privacy Policy — gliff for Android", "site/privacy-en.html"),
+               "Privacy Policy — Gliff Client", "site/privacy-en.html"),
               ("store/privacy-policy-fr.md", "fr",
-               "Politique de confidentialité — gliff pour Android", "site/privacy-fr.html"),
+               "Politique de confidentialité — Gliff Client", "site/privacy-fr.html"),
           ]
 
           for source, lang, title, target in pages:
@@ -99,11 +99,11 @@ jobs:
             <head>
               <meta charset="utf-8">
               <meta name="viewport" content="width=device-width, initial-scale=1">
-              <title>gliff for Android — Privacy Policy</title>
+              <title>Gliff Client — Privacy Policy</title>
               <link rel="stylesheet" href="style.css">
             </head>
             <body>
-              <h1>gliff for Android</h1>
+              <h1>Gliff Client</h1>
               <p>Privacy policy / Politique de confidentialité:</p>
               <ul>
                 <li><a href="privacy-en.html">English</a></li>

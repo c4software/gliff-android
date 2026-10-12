@@ -116,3 +116,7 @@ in a loop; it can also be used as `--server-bin` through SSH.
 
 `vendor/gliff` (not versioned) holds a clone of gliff, the reference for the
 protocol; `docs/protocol-notes.md` sums up what was found there.
+
+## License
+
+Released under the MIT license, like gliff itself. See `LICENSE`.

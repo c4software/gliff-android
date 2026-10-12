@@ -8,3 +8,7 @@ local.properties
 *.h264
 # The demonstration server loops this one.
 !/store/demo-server/sample.h264
+# Signing material never belongs here.
+*.jks
+*.keystore
+keystore.properties

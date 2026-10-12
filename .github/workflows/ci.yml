@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  # Switched off on purpose: every run costs build minutes, and the local
+  # check is the same commands. To be pointed at [main] the day it is worth it.
+  push:
+    branches: [never]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# No write access: this workflow checks, it publishes nothing.
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          # Only main writes the cache: a pull request must not be able to
+          # poison what the others read.
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      # One step each, so that the first failure names what failed.
+      - name: Protocol tests
+        run: ./gradlew :proto:jvmTest
+
+      - name: Transport tests
+        run: ./gradlew :transport:jvmTest
+
+      - name: Client and screen tests
+        run: ./gradlew :shared:desktopTest
+
+      - name: Build
+        run: ./gradlew :app:assembleDebug
+
+      - name: Upload the reports
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: reports
+          path: '*/build/reports/'
+          retention-days: 7

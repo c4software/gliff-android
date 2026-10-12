@@ -117,6 +117,31 @@ in a loop; it can also be used as `--server-bin` through SSH.
 `vendor/gliff` (not versioned) holds a clone of gliff, the reference for the
 protocol; `docs/protocol-notes.md` sums up what was found there.
 
+## Release builds
+
+The version is the git tag: `v1.2.3` gives `versionName` 1.2.3 and
+`versionCode` 1002003; any other commit is named after `git describe`.
+
+A release build is signed when it is given a keystore, and comes out unsigned
+otherwise. The keystore is described by the environment (`RELEASE_KEYSTORE`,
+a path, `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS`,
+`RELEASE_KEY_PASSWORD`), or by a properties file (`storeFile`,
+`storePassword`, `keyAlias`, `keyPassword`) that a `release.signing=` line of
+`local.properties` points to. Neither belongs in the repository.
+
+```sh
+./gradlew :app:assembleRelease   # APK
+./gradlew :app:bundleRelease     # AAB, for the Play Store
+```
+
+On GitHub, `.github/workflows/release.yml` does it on a `v*` tag, or by hand:
+tests, signed APK and bundle, a check of the signature and of the version, a
+GitHub release, and the bundle sent to internal testing on the Play Store
+when a `PLAY_SERVICE_ACCOUNT_JSON` secret exists. It reads the keystore from
+the secrets `RELEASE_KEYSTORE_BASE64` (`base64 -w0` of the file),
+`RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS` and `RELEASE_KEY_PASSWORD`.
+`ci.yml` runs the tests on pull requests.
+
 ## License
 
 Released under the MIT license, like gliff itself. See `LICENSE`.

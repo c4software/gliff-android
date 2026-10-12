@@ -4,7 +4,7 @@ What the Play Console asks for a first publication, ready to paste or upload.
 Texts come in **English** (the app's default language) and **French**.
 
 Application id: `io.github.c4software.gliff`
-Version shown in the screenshots: `0.1.0` (commit `aec67f8` plus this folder)
+Version shown in the screenshots: commit `e2d3a26`, before any tag
 
 ---
 
@@ -50,9 +50,11 @@ Version shown in the screenshots: `0.1.0` (commit `aec67f8` plus this folder)
    on-screen keyboard under the row of keys. Play requires screenshots to
    show the app as it is: retake 1 and 2 on a device, against a desktop that
    can be shown, before sending.
-3. **No release build.** There is no signing configuration, no production
-   keystore and no release workflow; `versionCode` is 1 and `versionName`
-   `0.1.0`. Play takes a signed App Bundle (`./gradlew :app:bundleRelease`).
+3. **No Play service account.** The release workflow builds and signs the
+   bundle on a `v*` tag, but sends it to the Play Console only with a
+   `PLAY_SERVICE_ACCOUNT_JSON` secret (Cloud Console → IAM → Service
+   accounts, invited in the Play Console with *Release to testing tracks*).
+   The very first bundle has to be uploaded by hand: the API refuses it.
 4. **The privacy policy has no URL.** [`pages.yml`](../.github/workflows/pages.yml)
    builds the site from the two files of this folder, but GitHub Pages has to
    be enabled once on the repository:

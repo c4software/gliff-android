@@ -8,6 +8,7 @@ coroutines = "1.10.2"
 sshj = "0.40.0"
 slf4j = "2.0.17"
 bouncycastle = "1.80.2"
+play-publisher = "3.12.1"
 
 [libraries]
 coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
@@ -27,3 +28,4 @@ compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "
 compose-multiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 android-library = { id = "com.android.library", version.ref = "agp" }
+play-publisher = { id = "com.github.triplet.play", version.ref = "play-publisher" }

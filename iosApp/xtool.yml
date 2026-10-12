@@ -1,0 +1,4 @@
+version: 1
+bundleID: io.github.c4software.gliff
+product: Gliff
+infoPath: Info.plist

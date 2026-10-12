@@ -1,0 +1,8 @@
+.build/
+/GliffSSH/.build/
+# Downloaded by scripts/fetch-ios-framework.sh.
+/Frameworks/
+# What xtool builds and keeps.
+/xtool/
+/.bsp/
+.swiftpm/

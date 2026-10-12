@@ -1,0 +1,6 @@
+Première version.
+
+• Votre bureau Hyprland par SSH, en écran privé ou en miroir.
+• Tactile, pavé tactile, souris et clavier, avec la disposition de la machine distante.
+• Presse-papiers texte partagé, image dans l'image, zoom par pincement.
+• Miroir web optionnel sur le réseau local.

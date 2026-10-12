@@ -1,0 +1,4 @@
+#!/bin/sh
+# sshd's AuthorizedKeysCommand: authorise the very key being offered, with
+# every extra (forwarding, terminal, agent) refused.
+echo "restrict $1 $2"

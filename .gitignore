@@ -6,3 +6,5 @@ local.properties
 .idea/
 .kotlin/
 *.h264
+# The demonstration server loops this one.
+!/store/demo-server/sample.h264

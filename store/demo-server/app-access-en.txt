@@ -1,0 +1,10 @@
+gliff for Android is a remote desktop client for the user's own Linux computer (Hyprland with gliff-server), reached over SSH with a key the app creates on the device. There is no account and no password. A demonstration machine is provided for this review; it accepts any device.
+
+1. Tap "Add machine".
+2. Address: demo@HOST:2222
+3. Tap "Save", then tap the machine in the list.
+4. "Unknown machine" appears with a fingerprint: tap "Trust".
+
+A recorded desktop plays in a loop. It is a recording: the pointer follows your finger, but clicks and typing change nothing in the picture.
+
+The three buttons at the bottom right switch between touch and trackpad, turn the screen, and open the keyboard with its row of extra keys. Pinch to zoom. "Options" on the first screen holds the settings.

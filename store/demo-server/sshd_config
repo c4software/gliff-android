@@ -1,0 +1,32 @@
+# sshd for the demonstration account: any key gets in, and gets nothing but
+# the stand-in server.
+Port 2222
+HostKey /keys/ssh_host_ed25519_key
+PidFile none
+
+AllowUsers demo
+PermitRootLogin no
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PubkeyAuthentication yes
+
+# Each installation of the app makes its own key, so none can be listed:
+# whichever key is offered is answered as authorised.
+AuthorizedKeysFile none
+AuthorizedKeysCommand /usr/local/bin/any-key %t %k
+AuthorizedKeysCommandUser nobody
+
+# Whatever the client asks to run, this runs instead.
+ForceCommand /usr/bin/python3 /opt/demo/server.py
+DisableForwarding yes
+PermitTTY no
+PermitUserRC no
+PermitUserEnvironment no
+AllowAgentForwarding no
+X11Forwarding no
+
+MaxSessions 4
+MaxStartups 10:30:40
+LoginGraceTime 20
+ClientAliveInterval 30
+ClientAliveCountMax 3

@@ -1,0 +1,56 @@
+gliff pour Android affiche sur votre téléphone ou votre tablette le bureau Hyprland de votre propre machine Linux, et vous permet de le piloter. C'est un client pour gliff, le bureau à distance libre pour Hyprland : l'image et vos saisies passent par une simple connexion SSH, vers une machine qui vous appartient.
+
+L'application ne fait rien seule. Il faut une machine Linux sous Hyprland, avec gliff-server installé, joignable en SSH. Il n'y a ni compte, ni relais, ni service en ligne entre les deux.
+
+UN ÉCRAN PRIVÉ, OU UN MIROIR
+
+• Écran privé : la machine ouvre un nouvel écran invisible, à la taille de votre appareil. Rien ne s'affiche sur ses moniteurs, et le bureau est disposé pour la fenêtre que vous tenez.
+• Miroir : vous voyez et pilotez l'un des vrais écrans de la machine, celui qui a le focus ou celui que vous nommez.
+• Le bureau suit la fenêtre : tournez l'appareil, redimensionnez-le en mode bureau ou partagez l'écran, et l'écran distant prend la nouvelle taille.
+
+PENSÉ POUR LE TACTILE
+
+• Touchez là où vous voulez cliquer, ou passez en mode pavé tactile pour viser précisément. Touchez à deux doigts pour le clic droit, gardez un doigt immobile pour faire glisser, déplacez deux doigts pour défiler.
+• Pincez pour agrandir une partie de l'écran, deux doigts pour vous y déplacer. Le zoom est local : le bureau distant garde sa taille.
+• Une souris et un clavier physiques fonctionnent comme sur la machine elle-même.
+
+UN CLAVIER QUI CONNAÎT LA DISPOSITION DISTANTE
+
+• Le clavier virtuel écrit sur la machine distante, surmonté d'une rangée Échap, Tab, Ctrl, Alt, Super et flèches : les raccourcis du gestionnaire de fenêtres restent à portée.
+• L'application lit la disposition de clavier de la machine distante : ce que vous tapez est ce qui arrive, et les raccourcis tombent sur les bonnes touches, en QWERTY, AZERTY, bépo ou autre.
+• Clavier ouvert, le bureau est dessiné plus petit plutôt que coupé : un terminal garde ses lignes.
+
+LE RESTE
+
+• Presse-papiers partagé, pour le texte, dans les deux sens. Il peut être désactivé.
+• Image dans l'image : gardez un œil sur une compilation en faisant autre chose.
+• Échelle d'affichage au choix, et une option pour garder l'écran allumé pendant une session.
+• Miroir web (désactivé par défaut) : affiche la session ouverte dans un navigateur du même réseau, avec contrôle depuis ce navigateur en option. L'adresse contient un secret ; quiconque la possède voit votre écran, et la liaison n'est pas chiffrée.
+
+SÉCURITÉ
+
+• SSH uniquement. L'application crée sa propre clé Ed25519 au premier usage ; vous ajoutez sa partie publique à ~/.ssh/authorized_keys sur votre machine. Aucun mot de passe n'est demandé ni conservé.
+• La clé d'hôte de la machine est affichée à la première connexion et vérifiée à chacune des suivantes. Une clé qui change bloque la connexion jusqu'à votre décision.
+
+CONFIDENTIALITÉ
+
+• L'application ne parle qu'aux machines que vous ajoutez. Aucune télémétrie, aucune publicité, aucun service tiers, aucun compte chez nous.
+
+PRÉREQUIS
+
+• Une machine Linux avec Hyprland et gliff-server (https://github.com/omacom/gliff), session Hyprland ouverte.
+• Un accès SSH à cette machine, sur votre réseau ou à travers un VPN comme Tailscale ou WireGuard.
+• Android 10 ou ultérieur, avec un décodeur H.264 matériel.
+
+LIMITES CONNUES
+
+• Une session se termine quand l'application reste longtemps en arrière-plan.
+• Le presse-papiers transporte du texte, pas d'images ni de fichiers.
+• Les touches mortes de la disposition distante ne sont pas encore composées.
+
+CODE OUVERT
+
+Licence MIT. Le code source complet est public :
+https://github.com/c4software/gliff-android
+
+gliff est un projet libre de Kevin McConnell. Cette application est un client indépendant, sans affiliation avec les projets gliff, Omarchy ou Hyprland, ni approbation ni parrainage de leur part.

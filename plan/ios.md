@@ -1,5 +1,33 @@
 # Plan : implémentation iOS / iPadOS de gliff
 
+## État (12 octobre 2026)
+
+| Phase | État |
+|---|---|
+| 0a. Outils dans la dev-box | Fait : `devbox dev-env ios` est livré dans l'image (Swift 6.4, xtool 1.21, pymobiledevice3). Reste `xtool setup` (compte Apple, `Xcode.xip`) et l'appairage USB de l'appareil. |
+| 0b. Essais | 2 fait : les klibs iOS compilent sous Linux, l'édition de liens y est ignorée (`SKIPPED`), pas en échec. 3 : workflow et script écrits, à constater sur le runner macOS. 1 (hello sur l'iPhone) : attend `xtool setup`. |
+| 1. Refactors communs | Fait et testé (JVM, desktop, APK). Reste l'essai de non-régression de l'app Android sur le téléphone. |
+| 2. Actuals iOS en Kotlin | Écrit ; compile pour `iosArm64` et `iosSimulatorArm64` sous Linux. Jamais exécuté. |
+| 3. App hôte Swift | `GliffSSH` (le client ssh) fait et testé sous Linux contre un vrai `sshd` et contre le portable (Tailscale SSH). L'app elle-même (`iosApp/Sources/Gliff`) est écrite mais n'a jamais été compilée : il faut le SDK iOS et le framework. |
+| 4. iPad avancé | Écrit (fenêtre par machine, pointeur masqué, Picture in Picture) ; à vérifier sur appareil, comme le reste. |
+| 5. CI, docs | `ci.yml` et README faits. TestFlight : pas commencé. |
+
+Écarts par rapport au plan, et pourquoi :
+
+- **NIOPosix, pas NIOTransportServices.** Un seul chemin de code, le même
+  sous Linux (où il est testé) et sur iOS. `swift-nio-ssh` n'a pas de
+  keepalive ssh : la veille est faite par TCP (15 s).
+- **Deux vues pour le clavier.** Kotlin ne peut pas redéfinir `inputView`
+  (une catégorie d'UIKit) : au lieu d'une vue qui masque son clavier, une vue
+  de saisie (`UIKeyInput`) et une vue muette se passent le focus.
+- **Un bouton pour fermer la session**, absent d'Android : iOS n'a ni geste
+  retour ni barre de titre.
+- **`SshBridge` par rappels**, sans rien de bloquant côté Swift ; c'est
+  Kotlin qui attend. La décision sur la clé d'hôte reste en Kotlin, Swift ne
+  passe que le blob de la clé.
+- **Fenêtres iPad en SwiftUI** (`WindowGroup(for:)`), qui pose le
+  `NSUserActivity` lui-même.
+
 ## Contexte
 
 Le client Android est fait ; le code est déjà en Kotlin Multiplatform pour qu'un

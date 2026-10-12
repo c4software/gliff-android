@@ -5,9 +5,8 @@ import java.security.KeyPair
 import java.security.KeyPairGenerator
 import java.security.Security
 import java.security.spec.PKCS8EncodedKeySpec
-import java.util.Base64
-import net.schmizz.sshj.common.Buffer
 import org.bouncycastle.jcajce.interfaces.EdDSAPrivateKey
+import org.bouncycastle.jcajce.interfaces.EdDSAPublicKey
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 
 /** The client's own Ed25519 key: made in the app, never typed in. */
@@ -40,8 +39,6 @@ object SshKeys {
     }
 
     /** The line to append to `~/.ssh/authorized_keys` on the server. */
-    fun authorizedKey(pair: KeyPair, comment: String): String {
-        val blob = Buffer.PlainBuffer().putPublicKey(pair.public).compactData
-        return "ssh-ed25519 " + Base64.getEncoder().encodeToString(blob) + " " + comment
-    }
+    fun authorizedKey(pair: KeyPair, comment: String): String =
+        SshWire.authorizedKey((pair.public as EdDSAPublicKey).pointEncoding, comment)
 }

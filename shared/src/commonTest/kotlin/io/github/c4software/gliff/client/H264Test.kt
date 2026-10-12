@@ -3,6 +3,7 @@ package io.github.c4software.gliff.client
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertSame
 
 class H264Test {
@@ -62,5 +63,38 @@ class H264Test {
             assertEquals(false, run, "start code emulated at $i in ${body.hex()}")
         }
         assertEquals("00000168ce3880", out.copyOfRange(out.size - 7, out.size).hex())
+    }
+
+    @Test
+    fun theParameterSetsOfAKeyframe() {
+        val sets = H264.parameterSets(keyframe)!!
+        assertEquals("67640033ac1b1a80780227e540", sets.sps.hex())
+        assertEquals("68ee3c80", sets.pps.hex())
+        assertNull(H264.parameterSets(hex("00000001 419a0004")))
+    }
+
+    @Test
+    fun startCodesBecomeLengths() {
+        // Only the slice is left: the parameter sets go in the format description.
+        // Its last byte here is a zero, which no whole NAL unit ends on: it
+        // goes with the padding a start code may be given.
+        assertEquals("00000005" + "6588800040", H264.avcc(keyframe).hex())
+        // Start codes of three and of four bytes, a delimiter in front, two slices.
+        val unit = hex("000001 09f0 00000001 419a0004 000001 419b")
+        assertEquals("00000004" + "419a0004" + "00000002" + "419b", H264.avcc(unit).hex())
+    }
+
+    @Test
+    fun aRewrittenSpsStillSplits() {
+        val out = H264.withoutReordering(keyframe)
+        assertEquals("67640033ac1b1a80780227e59a80808083c2211a80", H264.parameterSets(out)!!.sps.hex())
+        assertEquals("00000005" + "6588800040", H264.avcc(out).hex())
+    }
+
+    @Test
+    fun nothingToDecodeIsEmpty() {
+        assertEquals(0, H264.avcc(ByteArray(0)).size)
+        assertEquals(0, H264.avcc(hex("00000001 68ee3c80")).size)
+        assertEquals(0, H264.avcc(hex("0102030405")).size)
     }
 }

@@ -1,5 +1,7 @@
 package io.github.c4software.gliff.client
 
+import io.github.c4software.gliff.mirror.Fmp4
+
 /**
  * What a hardware decoder needs to be told about gliff's H.264.
  *
@@ -14,6 +16,8 @@ object H264 {
     private const val NAL_SLICE = 1
     private const val NAL_IDR = 5
     private const val NAL_SPS = 7
+    private const val NAL_PPS = 8
+    private const val NAL_AUD = 9
 
     /** Profiles whose SPS carries the chroma format and scaling matrices. */
     private val HIGH_PROFILES = setOf(100, 110, 122, 244, 44, 83, 86, 118, 128, 138, 139, 134, 135)
@@ -41,6 +45,33 @@ object H264 {
         accessUnit.copyInto(out, 0, 0, start)
         escaped.copyInto(out, start)
         accessUnit.copyInto(out, start + escaped.size, end, accessUnit.size)
+        return out
+    }
+
+    /** The SPS and PPS a keyframe carries, each without its start code; null when it has none. */
+    fun parameterSets(accessUnit: ByteArray): Fmp4.ParameterSets? = Fmp4.parameterSets(accessUnit)
+
+    /**
+     * The Annex B access unit as a decoder fed through a format description
+     * takes it (AVCC): each NAL unit behind its length on four bytes, in
+     * place of a start code. Parameter sets and delimiters are left out: they
+     * travel in the format description. Empty when nothing else is there.
+     */
+    fun avcc(accessUnit: ByteArray): ByteArray {
+        val units = Fmp4.nalUnits(accessUnit).filter {
+            when (accessUnit[it.first].toInt() and 0x1f) {
+                NAL_SPS, NAL_PPS, NAL_AUD -> false
+                else -> true
+            }
+        }
+        val out = ByteArray(units.sumOf { 4 + it.count() })
+        var at = 0
+        for (unit in units) {
+            val length = unit.count()
+            for (i in 0..3) out[at + i] = (length ushr (24 - 8 * i)).toByte()
+            accessUnit.copyInto(out, at + 4, unit.first, unit.first + length)
+            at += 4 + length
+        }
         return out
     }
 

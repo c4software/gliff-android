@@ -118,11 +118,14 @@ expect fun SoftKeyboard(shown: Boolean, sink: KeySink)
  * `pip`: the window is a picture-in-picture thumbnail, which only watches.
  * `turns`: the host can lay the window on its side, which a button then
  * offers; it does so while `onLandscape` last said true.
+ * `onClose`: where nothing of the system closes a window (no back gesture, no
+ * title bar), a button of the screen does.
  */
 @Composable
 fun SessionScreen(
     controller: SessionController,
     onBack: () -> Unit,
+    onClose: (() -> Unit)? = null,
     pip: Boolean = false,
     turns: Boolean = false,
     onLandscape: (Boolean) -> Unit = {},
@@ -139,6 +142,7 @@ fun SessionScreen(
         onAcceptHostKey = controller::acceptHostKey,
         onRetry = controller::start,
         onBack = onBack,
+        onClose = onClose,
         pip = pip,
         turns = turns,
         onLandscape = onLandscape,
@@ -173,6 +177,7 @@ fun SessionContent(
     send: (ClientMsg) -> Unit = {},
     keyboard: @Composable (shown: Boolean, sink: KeySink) -> Unit = { _, _ -> },
     keyboardOpen: Boolean = false,
+    onClose: (() -> Unit)? = null,
     video: @Composable (Modifier) -> Unit,
 ) {
     // The picture keeps its last geometry while the session is elsewhere
@@ -352,6 +357,7 @@ fun SessionContent(
                             Modifier.align(Alignment.BottomEnd).padding(12.dp).alpha(0.7f),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
+                            if (onClose != null) KeyButton(ICON_CLOSE, onClick = onClose)
                             KeyButton(if (direct) ICON_TRACKPAD else ICON_TOUCH) { direct = !direct }
                             if (turns) KeyButton(if (lyingDown) ICON_UPRIGHT else ICON_LYING) { lyingDown = !lyingDown }
                             KeyButton(ICON_KEYBOARD) { typing = true }
@@ -455,6 +461,7 @@ private fun KeyButton(
                 ICON_TOUCH -> PointingIcon(touch = true)
                 ICON_LYING -> ScreenIcon(lying = true)
                 ICON_UPRIGHT -> ScreenIcon(lying = false)
+                ICON_CLOSE -> CloseIcon()
                 else -> Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1)
             }
         }
@@ -484,6 +491,17 @@ private fun PointingIcon(touch: Boolean) {
     }
 }
 private const val ICON_UPRIGHT = "\u0000upright"
+private const val ICON_CLOSE = "\u0000close"
+
+@Composable
+private fun CloseIcon() {
+    val color = LocalContentColor.current
+    Canvas(Modifier.size(20.dp, 20.dp)) {
+        val u = 1.dp.toPx()
+        drawLine(color, Offset(5f * u, 5f * u), Offset(15f * u, 15f * u), 1.5f * u)
+        drawLine(color, Offset(15f * u, 5f * u), Offset(5f * u, 15f * u), 1.5f * u)
+    }
+}
 
 /** A phone, in the position the button turns the screen to. */
 @Composable

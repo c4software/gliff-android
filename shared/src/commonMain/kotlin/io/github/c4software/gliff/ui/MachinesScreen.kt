@@ -65,8 +65,8 @@ fun MachinesScreen(
     identity: Identity,
     onOpen: (Machine) -> Unit,
     settings: SettingsRepository,
-    /** The web mirror's addresses for a token, when it is on. */
-    mirrorUrls: (token: String) -> List<String> = { emptyList() },
+    /** The web mirror's addresses for a token, when it is on; null where there is no mirror. */
+    mirrorUrls: ((token: String) -> List<String>)? = null,
     strings: Strings = rememberStrings(),
 ) {
     val list by machines.machines.collectAsState()
@@ -90,7 +90,7 @@ fun MachinesScreen(
     if (showOptions) {
         SettingsDialog(
             settings = current,
-            mirrorUrls = if (current.httpMirror) mirrorUrls(current.mirrorToken) else emptyList(),
+            mirrorUrls = mirrorUrls?.let { if (current.httpMirror) it(current.mirrorToken) else emptyList() },
             strings = strings,
             onChange = { changed -> settings.update { changed } },
             onDismiss = { showOptions = false },
@@ -328,7 +328,8 @@ fun KeyDialog(key: String?, strings: Strings, onDismiss: () -> Unit) {
 @Composable
 fun SettingsDialog(
     settings: Settings,
-    mirrorUrls: List<String>,
+    /** Where the web mirror answers; null hides its options, where there is no mirror. */
+    mirrorUrls: List<String>?,
     strings: Strings,
     onChange: (Settings) -> Unit,
     onDismiss: () -> Unit,
@@ -368,10 +369,12 @@ fun SettingsDialog(
                 Toggle(strings.keepAwake, strings.keepAwakeExplain, settings.keepAwake) {
                     onChange(settings.copy(keepAwake = it))
                 }
-                Toggle(strings.httpMirror, strings.httpMirrorExplain, settings.httpMirror) {
-                    onChange(settings.copy(httpMirror = it))
+                if (mirrorUrls != null) {
+                    Toggle(strings.httpMirror, strings.httpMirrorExplain, settings.httpMirror) {
+                        onChange(settings.copy(httpMirror = it))
+                    }
                 }
-                if (settings.httpMirror) {
+                if (mirrorUrls != null && settings.httpMirror) {
                     Toggle(strings.mirrorControl, strings.mirrorControlExplain, settings.mirrorControl) {
                         onChange(settings.copy(mirrorControl = it))
                     }

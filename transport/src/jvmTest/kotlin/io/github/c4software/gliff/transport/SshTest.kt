@@ -39,9 +39,11 @@ class SshTest {
             writeText("#!/bin/sh\necho \"args: \$*\" >&2\nexec cat\n")
             setExecutable(true)
         }
+        // Its own configuration, empty: the machine's may not even be readable by this user.
+        File(dir, "sshd_config").writeText("")
         port = ServerSocket(0).use { it.localPort }
         sshd = ProcessBuilder(
-            binary!!.path, "-D", "-e", "-p", "$port", "-o", "ListenAddress=127.0.0.1",
+            binary!!.path, "-D", "-e", "-f", "$dir/sshd_config", "-p", "$port", "-o", "ListenAddress=127.0.0.1",
             "-h", "$dir/hostkey", "-o", "AuthorizedKeysFile=$dir/authorized_keys", "-o", "PidFile=none",
             "-o", "UsePAM=no", "-o", "StrictModes=no", "-o", "PasswordAuthentication=no",
         ).redirectErrorStream(true).redirectOutput(File(dir, "sshd.log")).start()

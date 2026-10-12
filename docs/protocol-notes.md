@@ -126,7 +126,6 @@ gliff code is authoritative; these notes say where to look.
   it sends; the remote shape is not displayed yet.
 - **Touch scrolling**: `PointerAxis` without `discrete` ("finger" source on
   the server side), then `stop` when the fingers lift.
-- **PiP**: the thumbnail does not cause a `Resize`.
 - **Scale**: Hyprland only keeps a scale that is a multiple of 1/120 and
   divides both sides into whole logical pixels, and replaces the others (1.8
   on 1080x1046 became 2). `remoteMode` therefore picks a nearby valid scale

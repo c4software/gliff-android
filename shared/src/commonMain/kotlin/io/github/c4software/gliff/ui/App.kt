@@ -17,8 +17,6 @@ import io.github.c4software.gliff.client.SettingsRepository
 
 /** What the window around a session can do, and wants to be told. */
 class SessionHost(
-    /** The window is a picture-in-picture thumbnail, which only watches. */
-    val pip: Boolean = false,
     /** The host can lay the window on its side; it does so while [onLandscape] last said true. */
     val turns: Boolean = false,
     val onLandscape: (Boolean) -> Unit = {},
@@ -74,7 +72,6 @@ fun App(
         controller,
         onBack = leave,
         onClose = leave,
-        pip = host.pip,
         turns = host.turns,
         onLandscape = host.onLandscape,
         settings = current,

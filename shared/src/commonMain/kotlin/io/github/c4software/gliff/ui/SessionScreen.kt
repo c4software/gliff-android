@@ -115,7 +115,6 @@ expect fun SoftKeyboard(shown: Boolean, sink: KeySink)
 
 /**
  * A machine's remote screen, with whatever stands between the user and it.
- * `pip`: the window is a picture-in-picture thumbnail, which only watches.
  * `turns`: the host can lay the window on its side, which a button then
  * offers; it does so while `onLandscape` last said true.
  * `onClose`: where nothing of the system closes a window (no back gesture, no
@@ -126,7 +125,6 @@ fun SessionScreen(
     controller: SessionController,
     onBack: () -> Unit,
     onClose: (() -> Unit)? = null,
-    pip: Boolean = false,
     turns: Boolean = false,
     onLandscape: (Boolean) -> Unit = {},
     settings: Settings = Settings(),
@@ -143,7 +141,6 @@ fun SessionScreen(
         onRetry = controller::start,
         onBack = onBack,
         onClose = onClose,
-        pip = pip,
         turns = turns,
         onLandscape = onLandscape,
         directTouch = settings.directTouch,
@@ -169,7 +166,6 @@ fun SessionContent(
     onAcceptHostKey: () -> Unit,
     onRetry: () -> Unit,
     onBack: () -> Unit,
-    pip: Boolean = false,
     turns: Boolean = false,
     onLandscape: (Boolean) -> Unit = {},
     directTouch: Boolean = true,
@@ -184,7 +180,7 @@ fun SessionContent(
     // (reconnecting, resizing), so the last frame stays where it was.
     var stream by remember { mutableStateOf<StreamInfo?>(null) }
     if (state is SessionState.Streaming) stream = state.stream
-    val live = state is SessionState.Streaming && !pip
+    val live = state is SessionState.Streaming
 
     val sender = rememberUpdatedState(send)
     val slop = LocalViewConfiguration.current.touchSlop
@@ -257,7 +253,7 @@ fun SessionContent(
             .background(Color.Black)
             // Clear of the system bars, the cutout, a desktop window's caption
             // bar and the on-screen keyboard: the picture sits above it.
-            .then(if (pip) Modifier else Modifier.windowInsetsPadding(WindowInsets.safeDrawing)),
+            .windowInsetsPadding(WindowInsets.safeDrawing),
     ) {
         Column(Modifier.fillMaxSize()) {
             Box(
@@ -268,8 +264,6 @@ fun SessionContent(
                     .clipToBounds()
                     .onSizeChanged {
                         area = it
-                        // A thumbnail is no reason to shrink the remote screen.
-                        if (pip) return@onSizeChanged
                         // Mid-turn: this is not the shape the window is heading for.
                         if (turns && landscape != (it.width > it.height)) return@onSizeChanged
                         if (!typing && !imeUp) whole = it

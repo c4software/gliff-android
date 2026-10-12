@@ -23,7 +23,6 @@ UN CLAVIER QUI CONNAÎT LA DISPOSITION DISTANTE
 LE RESTE
 
 • Presse-papiers partagé, pour le texte, dans les deux sens. Il peut être désactivé.
-• Image dans l'image : gardez un œil sur une compilation en faisant autre chose.
 • Échelle d'affichage au choix, et une option pour garder l'écran allumé pendant une session.
 • Miroir web (désactivé par défaut) : affiche la session ouverte dans un navigateur du même réseau, avec contrôle depuis ce navigateur en option. L'adresse contient un secret ; quiconque la possède voit votre écran, et la liaison n'est pas chiffrée.
 

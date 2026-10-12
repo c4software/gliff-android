@@ -5,10 +5,8 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.net.Uri
-import android.app.PictureInPictureParams
 import android.content.ClipboardManager
 import android.os.Bundle
-import android.util.Rational
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -22,7 +20,6 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import io.github.c4software.gliff.client.SessionController
-import io.github.c4software.gliff.client.SessionState
 import io.github.c4software.gliff.ui.GliffTheme
 import io.github.c4software.gliff.ui.SessionScreen
 
@@ -35,9 +32,6 @@ import io.github.c4software.gliff.ui.SessionScreen
 class SessionActivity : ComponentActivity() {
     private var machineId: String? = null
     private var controller: SessionController? = null
-
-    /** The window is, or is about to be, a picture-in-picture thumbnail. */
-    private var pip by mutableStateOf(false)
 
     /** The window's position is ours to choose: a phone's whole screen, not a window among others. */
     private var turns by mutableStateOf(false)
@@ -68,7 +62,6 @@ class SessionActivity : ComponentActivity() {
                 SessionScreen(
                     controller,
                     onBack = ::finish,
-                    pip = pip,
                     turns = turns,
                     settings = settings,
                     onLandscape = {
@@ -127,34 +120,6 @@ class SessionActivity : ComponentActivity() {
         super.onStop()
     }
 
-    /** Leaving for another app keeps the remote screen in a corner. */
-    override fun onUserLeaveHint() {
-        super.onUserLeaveHint()
-        val stream = (controller?.state?.value as? SessionState.Streaming)?.stream ?: return
-        if (isInMultiWindowMode) return
-        // Android refuses anything narrower than 1:2.39 or wider than 2.39:1.
-        val ratio = Rational(stream.viewWidth, stream.viewHeight).let {
-            when {
-                it.toFloat() > MAX_PIP_RATIO.toFloat() -> MAX_PIP_RATIO
-                it.toFloat() < 1 / MAX_PIP_RATIO.toFloat() -> Rational(MAX_PIP_RATIO.denominator, MAX_PIP_RATIO.numerator)
-                else -> it
-            }
-        }
-        // Set first: the thumbnail's size must not reach the remote as a resize.
-        pip = true
-        val entered = runCatching {
-            enterPictureInPictureMode(PictureInPictureParams.Builder().setAspectRatio(ratio).build())
-        }.getOrDefault(false)
-        if (!entered) pip = false
-    }
-
-    override fun onPictureInPictureModeChanged(isInPictureInPictureMode: Boolean, newConfig: Configuration) {
-        super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
-        pip = isInPictureInPictureMode
-        if (!isInPictureInPictureMode) applyImmersion()
-        applyOrientation()
-    }
-
     /**
      * A phone holds the remote screen upright until its button lays it down,
      * and stands it back up for the keyboard, which would cover most of a
@@ -162,7 +127,7 @@ class SessionActivity : ComponentActivity() {
      * display, keep the shape the user gave them.
      */
     private fun applyOrientation() {
-        turns = !isInMultiWindowMode && !isInPictureInPictureMode &&
+        turns = !isInMultiWindowMode &&
             resources.configuration.smallestScreenWidthDp < LARGE_SCREEN_DP
         requestedOrientation = when {
             !turns -> ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
@@ -177,7 +142,6 @@ class SessionActivity : ComponentActivity() {
      */
     private fun applyImmersion() {
         val controller = WindowCompat.getInsetsController(window, window.decorView)
-        if (isInPictureInPictureMode) return
         if (isInMultiWindowMode) {
             controller.show(WindowInsetsCompat.Type.systemBars())
         } else {
@@ -194,8 +158,6 @@ class SessionActivity : ComponentActivity() {
     }
 
     companion object {
-        private val MAX_PIP_RATIO = Rational(239, 100)
-
         /** From this width up Android itself stops honouring orientation requests. */
         private const val LARGE_SCREEN_DP = 600
 

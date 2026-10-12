@@ -153,7 +153,6 @@ fun MainViewController(
             App(
                 graph.machines, graph.settings, graph.identity, graph.sessions,
                 host = SessionHost(
-                    pip = window.pip,
                     turns = graph.phone,
                     onLandscape = window::landscape,
                     onSession = window::show,
@@ -174,17 +173,12 @@ internal class WindowState(private val graph: IosGraph) {
     var session by mutableStateOf<SessionController?>(null)
         private set
 
-    /** The session's video is in a picture-in-picture thumbnail. */
-    var pip by mutableStateOf(false)
-        private set
-
     private var controller: UIViewController? = null
     private var watching: Job? = null
-    private var picture: PictureInPicture? = null
 
     /** Hides the mouse pointer over a private screen, whose video has the remote's own in it. */
     private val pointer = PointerHider {
-        ((session?.state?.value as? SessionState.Streaming)?.stream?.headless == true) && !pip
+        (session?.state?.value as? SessionState.Streaming)?.stream?.headless == true
     }
     private val pointerInteraction = UIPointerInteraction(delegate = pointer)
 
@@ -198,9 +192,6 @@ internal class WindowState(private val graph: IosGraph) {
         if (next === session) return
         session = next
         watching?.cancel()
-        picture?.close()
-        picture = null
-        pip = false
         if (next == null) {
             controller?.let { graph.turn(null, it) }
             pointerInteraction.invalidate()
@@ -208,12 +199,6 @@ internal class WindowState(private val graph: IosGraph) {
         }
         // The pointer is asked for anew whenever the session changes state.
         watching = graph.scope.launch { next.state.collect { pointerInteraction.invalidate() } }
-        (next.decoder as? VideoToolboxDecoder)?.let { decoder ->
-            picture = PictureInPicture(decoder.layer) {
-                pip = it
-                pointerInteraction.invalidate()
-            }
-        }
         graph.offerClipboard()
     }
 

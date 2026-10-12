@@ -9,7 +9,7 @@
 | 1. Refactors communs | Fait et testé (JVM, desktop, APK). Reste l'essai de non-régression de l'app Android sur le téléphone. |
 | 2. Actuals iOS en Kotlin | Écrit ; compile pour `iosArm64` et `iosSimulatorArm64` sous Linux. Jamais exécuté. |
 | 3. App hôte Swift | `GliffSSH` (le client ssh) fait et testé sous Linux contre un vrai `sshd` et contre le portable (Tailscale SSH). L'app elle-même (`iosApp/Sources/Gliff`) est écrite mais n'a jamais été compilée : il faut le SDK iOS et le framework. |
-| 4. iPad avancé | Écrit (fenêtre par machine, pointeur masqué, Picture in Picture) ; à vérifier sur appareil, comme le reste. |
+| 4. iPad avancé | Écrit (fenêtre par machine, pointeur masqué) ; à vérifier sur appareil, comme le reste. Le Picture in Picture a été retiré des deux plateformes le 13 octobre 2026, jugé inutile. |
 | 5. CI, docs | `ci.yml` et README faits. TestFlight : pas commencé. |
 
 Écarts par rapport au plan, et pourquoi :

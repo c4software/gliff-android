@@ -39,7 +39,6 @@
             android:configChanges="screenSize|smallestScreenSize|screenLayout|orientation|density|keyboard|keyboardHidden|navigation|uiMode|fontScale|locale|layoutDirection"
             android:documentLaunchMode="intoExisting"
             android:exported="false"
-            android:supportsPictureInPicture="true"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize" />
     </application>
 </manifest>

@@ -28,7 +28,7 @@ What the client does:
 - **Screens**: a private (headless) screen sized to the window, or the mirror
   of an output.
 - **Windows**: resizable windows, one per machine in desktop mode (Android)
-  or on an iPad, and picture-in-picture.
+  or on an iPad.
 - **Pointer**: touch as direct touch or as a trackpad, pinch to zoom and
   two-finger pan on the client side, physical mouse.
 - **Keyboard**: on-screen keyboard with a row of extra keys, and physical

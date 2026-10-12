@@ -36,7 +36,6 @@ let package = Package(
                 // Shared is a static framework: what it uses is linked here.
                 .linkedLibrary("c++"),
                 .linkedFramework("AVFoundation"),
-                .linkedFramework("AVKit"),
                 .linkedFramework("CoreGraphics"),
                 .linkedFramework("CoreMedia"),
                 .linkedFramework("CoreText"),

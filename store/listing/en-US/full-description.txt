@@ -23,7 +23,6 @@ A KEYBOARD THAT KNOWS THE REMOTE LAYOUT
 THE REST
 
 • Shared clipboard, for text, in both directions. It can be turned off.
-• Picture-in-picture: keep an eye on a build while you do something else.
 • Display scale of your choice, and an option to keep the screen on during a session.
 • Web mirror (off by default): shows the open session in a browser on the same network, with optional control from that browser. The address contains a secret; anyone who has it sees your screen, and the link is not encrypted.
 

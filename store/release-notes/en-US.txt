@@ -2,5 +2,5 @@ First release.
 
 • Your Hyprland desktop over SSH, on a private screen or as a mirror.
 • Touch, trackpad, mouse and keyboard, with the remote machine's own layout.
-• Shared text clipboard, picture-in-picture, pinch to zoom.
+• Shared text clipboard, pinch to zoom.
 • Optional web mirror on the local network.

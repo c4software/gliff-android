@@ -57,6 +57,11 @@ jobs:
         with:
           cache-read-only: true
 
+      # The SSH tests start the runner's own sshd, as the current user; on
+      # Ubuntu it refuses to start without this directory.
+      - name: Let sshd start
+        run: sudo mkdir -p /run/sshd
+
       # Checked before it is signed: the same tests as ci.yml.
       - name: Tests
         run: ./gradlew :proto:jvmTest :transport:jvmTest :shared:desktopTest

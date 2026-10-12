@@ -38,6 +38,11 @@ jobs:
           # poison what the others read.
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
+      # The SSH tests start the runner's own sshd, as the current user; on
+      # Ubuntu it refuses to start without this directory.
+      - name: Let sshd start
+        run: sudo mkdir -p /run/sshd
+
       # One step each, so that the first failure names what failed.
       - name: Protocol tests
         run: ./gradlew :proto:jvmTest

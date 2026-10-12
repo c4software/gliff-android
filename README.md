@@ -1,7 +1,14 @@
-# gliff-android
+# Gliff Client
 
 An Android client for [gliff](https://github.com/omacom/gliff), the Hyprland
 remote desktop over SSH. It talks to an unmodified `gliff-server`.
+
+<p align="center">
+  <img src="store/screenshots/phone/en-US/01-session.png" width="22%" alt="A session showing the remote desktop">
+  <img src="store/screenshots/phone/en-US/02-keys.png" width="22%" alt="The row of extra keys under a session">
+  <img src="store/screenshots/phone/en-US/03-machines.png" width="22%" alt="The list of saved machines">
+  <img src="store/screenshots/phone/en-US/04-options.png" width="22%" alt="The options dialog">
+</p>
 
 This project is not affiliated with the gliff authors.
 

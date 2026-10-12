@@ -60,14 +60,14 @@ Version shown in the screenshots: commit `e2d3a26`, before any tag
    be enabled once on the repository:
 
    ```sh
-   gh api -X POST repos/c4software/gliff-android/pages -f build_type=workflow
+   gh api -X POST repos/c4software/gliff-client/pages -f build_type=workflow
    ```
 
    Then check both URLs answer on the day of sending:
 
    ```
-   https://c4software.github.io/gliff-android/privacy-en.html
-   https://c4software.github.io/gliff-android/privacy-fr.html
+   https://c4software.github.io/gliff-client/privacy-en.html
+   https://c4software.github.io/gliff-client/privacy-fr.html
    ```
 5. **The name.** "gliff" is the name of someone else's project. The title
    "Gliff Client" and the closing paragraph of the description say the

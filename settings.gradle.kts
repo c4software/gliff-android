@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "gliff-android"
+rootProject.name = "gliff-client"
 
 include(":proto")
 include(":transport")

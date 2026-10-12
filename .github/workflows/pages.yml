@@ -8,7 +8,7 @@ name: Privacy policy
 # GitHub Pages has to be enabled once, in "GitHub Actions" mode; a workflow's
 # own token cannot do it:
 #
-#     gh api -X POST repos/c4software/gliff-android/pages -f build_type=workflow
+#     gh api -X POST repos/c4software/gliff-client/pages -f build_type=workflow
 on:
   push:
     branches: [main]
@@ -109,7 +109,7 @@ jobs:
                 <li><a href="privacy-en.html">English</a></li>
                 <li><a href="privacy-fr.html">Français</a></li>
               </ul>
-              <p><a href="https://github.com/c4software/gliff-android">Source code</a>, MIT licence.</p>
+              <p><a href="https://github.com/c4software/gliff-client">Source code</a>, MIT licence.</p>
             </body>
           </html>
           HTML

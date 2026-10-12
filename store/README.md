@@ -51,7 +51,7 @@ Version shown in the screenshots: commit `e2d3a26`, before any tag
    show the app as it is: retake 1 and 2 on a device, against a desktop that
    can be shown, before sending.
 3. **No Play service account.** The release workflow builds and signs the
-   bundle on a `v*` tag, but sends it to the Play Console only with a
+   bundle on an `android-v*` tag, but sends it to the Play Console only with a
    `PLAY_SERVICE_ACCOUNT_JSON` secret (Cloud Console → IAM → Service
    accounts, invited in the Play Console with *Release to testing tracks*).
    The very first bundle has to be uploaded by hand: the API refuses it.

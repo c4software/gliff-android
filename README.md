@@ -94,7 +94,7 @@ runs on GitHub (`.github/workflows/ios-framework.yml`, a macOS runner) and
 its result is downloaded:
 
 ```sh
-gh workflow run ios-framework.yml --ref "$(git branch --show-current)"
+git tag ios-try-1 && git push origin ios-try-1   # any ios-* tag builds one
 scripts/fetch-ios-framework.sh        # into iosApp/Frameworks, needs gh
 cd iosApp
 xtool dev                             # build, sign, install and launch
@@ -154,7 +154,7 @@ protocol; `docs/protocol-notes.md` sums up what was found there.
 
 ## Release builds (Android)
 
-The version is the git tag: `v1.2.3` gives `versionName` 1.2.3 and
+The version is the git tag: `android-v1.2.3` gives `versionName` 1.2.3 and
 `versionCode` 1002003; any other commit is named after `git describe`.
 
 A release build is signed when it is given a keystore, and comes out unsigned
@@ -169,7 +169,7 @@ a path, `RELEASE_KEYSTORE_PASSWORD`, `RELEASE_KEY_ALIAS`,
 ./gradlew :app:bundleRelease     # AAB, for the Play Store
 ```
 
-On GitHub, `.github/workflows/release.yml` does it on a `v*` tag, or by hand:
+On GitHub, `.github/workflows/release.yml` does it on an `android-v*` tag, or by hand:
 tests, signed APK and bundle, a check of the signature and of the version, a
 GitHub release, and the bundle sent to internal testing on the Play Store
 when a `PLAY_SERVICE_ACCOUNT_JSON` secret exists. It reads the keystore from

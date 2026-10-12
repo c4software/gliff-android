@@ -7,22 +7,14 @@ name: iOS framework
 # project), so this is the one step that needs a macOS runner: its artifact is
 # what scripts/fetch-ios-framework.sh downloads into iosApp/Frameworks.
 #
-# Run by hand, on a version tag, and on the ios branch for as long as the port
-# is being written there, when what the framework is made of changes.
+# Run by hand, and on an ios-* tag (ios-v1.2.3, or any name for a build to
+# try: ios-try-keyboard). Never on a plain push: a macOS runner for every
+# commit would be minutes spent on frameworks nobody downloads.
 on:
   workflow_dispatch:
   push:
     tags:
-      - 'v*'
-    branches: [ios]
-    paths:
-      - 'proto/**'
-      - 'transport/**'
-      - 'shared/**'
-      - 'gradle/**'
-      - '*.gradle.kts'
-      - 'gradle.properties'
-      - '.github/workflows/ios-framework.yml'
+      - 'ios-*'
 
 concurrency:
   group: ios-framework-${{ github.ref }}
@@ -49,7 +41,7 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+          cache-read-only: true
 
       # The device and both simulators, release: what the app links against.
       - name: Link the framework

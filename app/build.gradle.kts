@@ -10,7 +10,8 @@ plugins {
     alias(libs.plugins.play.publisher)
 }
 
-// The version is the git tag, not a number kept by hand. `git describe` gives
+// The version is the git tag, not a number kept by hand: android-v1.2.3 (the
+// tags before the iOS app had no prefix, and still count). `git describe` gives
 // `v1.2.3` on a tagged commit, `v1.2.3-4-gabc1234` four commits later, and a
 // bare hash while there is no tag at all: only the first is a release, and
 // the name of the others says so. RELEASE_VERSION comes first: the release
@@ -18,10 +19,10 @@ plugins {
 val describedVersion: String =
     providers.environmentVariable("RELEASE_VERSION").orNull?.takeIf(String::isNotBlank)
         ?: providers.exec {
-            commandLine("git", "describe", "--tags", "--always", "--dirty")
+            commandLine("git", "describe", "--tags", "--always", "--dirty", "--match", "android-v*", "--match", "v*")
             isIgnoreExitValue = true
         }.let { run ->
-            run.standardOutput.asText.get().trim().takeIf { run.result.get().exitValue == 0 && it.isNotEmpty() }
+            run.standardOutput.asText.get().trim().removePrefix("android-").takeIf { run.result.get().exitValue == 0 && it.isNotEmpty() }
         }
         ?: "0.0.0-unknown"
 

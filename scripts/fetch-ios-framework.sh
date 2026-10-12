@@ -6,8 +6,8 @@
 #   scripts/fetch-ios-framework.sh            the last successful run
 #   scripts/fetch-ios-framework.sh <run id>   that run
 #
-# To build one from the current branch first:
-#   gh workflow run ios-framework.yml --ref "$(git branch --show-current)"
+# To build one from a commit first, tag it ios-something and push the tag:
+#   git tag ios-try-1 && git push origin ios-try-1
 set -eu
 here="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$here"

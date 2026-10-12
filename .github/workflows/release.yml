@@ -1,6 +1,7 @@
 name: Release
 
-# Run by hand, and on a version tag.
+# Run by hand, and on an Android version tag: android-v1.2.3. The ios-* tags
+# belong to the iOS framework workflow.
 #
 # Not on push: a signed artifact at every commit would cost build minutes for
 # something nobody waits for, and multiply for no reason the runs that have
@@ -14,7 +15,7 @@ on:
         default: false
   push:
     tags:
-      - 'v*'
+      - 'android-v*'
 
 concurrency:
   group: release-${{ github.ref }}
@@ -40,8 +41,9 @@ jobs:
       - name: Work out the version
         run: |
           if [ "${{ github.ref_type }}" = "tag" ]; then
-            echo "RELEASE_VERSION=${{ github.ref_name }}" >> "$GITHUB_ENV"
-            echo "Version: ${{ github.ref_name }}"
+            version="${GITHUB_REF_NAME#android-}"
+            echo "RELEASE_VERSION=$version" >> "$GITHUB_ENV"
+            echo "Version: $version"
           else
             echo "No tag: an intermediate build, named after its commit."
           fi
@@ -100,7 +102,7 @@ jobs:
           aapt2=$(find "$ANDROID_HOME/build-tools" -name aapt2 | sort -V | tail -1)
           badging=$("$aapt2" dump badging app/build/outputs/apk/release/app-release.apk | head -1)
           echo "$badging"
-          expected="${GITHUB_REF_NAME#v}"
+          expected="${GITHUB_REF_NAME#android-v}"
           if ! echo "$badging" | grep -q "versionName='$expected'"; then
             echo "::error::The artifact does not carry version $expected."
             exit 1
@@ -147,7 +149,7 @@ jobs:
     runs-on: ubuntu-latest
     # On a tag, or when asked for: a release goes out to the world, it must
     # not happen as a side effect.
-    if: startsWith(github.ref, 'refs/tags/v') || inputs.publish
+    if: startsWith(github.ref, 'refs/tags/android-v') || inputs.publish
     permissions:
       contents: write
 

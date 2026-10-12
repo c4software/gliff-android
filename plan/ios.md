@@ -5,7 +5,7 @@
 | Phase | État |
 |---|---|
 | 0a. Outils dans la dev-box | Fait : `devbox dev-env ios` est livré dans l'image (Swift 6.4, xtool 1.21, pymobiledevice3). Reste `xtool setup` (compte Apple, `Xcode.xip`) et l'appairage USB de l'appareil. |
-| 0b. Essais | 2 fait : les klibs iOS compilent sous Linux, l'édition de liens y est ignorée (`SKIPPED`), pas en échec. 3 : workflow et script écrits, à constater sur le runner macOS. 1 (hello sur l'iPhone) : attend `xtool setup`. |
+| 0b. Essais | 2 fait : les klibs iOS compilent sous Linux, l'édition de liens y est ignorée (`SKIPPED`), pas en échec. 3 : `Shared.xcframework` se lie sur le runner macOS (25 min) et `scripts/fetch-ios-framework.sh` le récupère ; son en-tête correspond aux appels de l'app Swift. Reste à voir xtool l'accepter et l'écran Compose s'afficher. 1 (hello sur l'iPhone) : attend `xtool setup`. |
 | 1. Refactors communs | Fait et testé (JVM, desktop, APK). Reste l'essai de non-régression de l'app Android sur le téléphone. |
 | 2. Actuals iOS en Kotlin | Écrit ; compile pour `iosArm64` et `iosSimulatorArm64` sous Linux. Jamais exécuté. |
 | 3. App hôte Swift | `GliffSSH` (le client ssh) fait et testé sous Linux contre un vrai `sshd` et contre le portable (Tailscale SSH). L'app elle-même (`iosApp/Sources/Gliff`) est écrite mais n'a jamais été compilée : il faut le SDK iOS et le framework. |

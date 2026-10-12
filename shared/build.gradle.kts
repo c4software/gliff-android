@@ -1,4 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.apple.XCFramework
 
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
@@ -21,9 +22,17 @@ kotlin {
             jvmTarget = JvmTarget.JVM_17
         }
     }
-    iosArm64()
-    iosSimulatorArm64()
-    iosX64()
+    // One static framework, Shared, for the Swift host app in iosApp. Linking
+    // it needs a Mac: under Linux these targets only compile, and the
+    // ios-framework workflow builds the XCFramework on a macOS runner.
+    val xcframework = XCFramework("Shared")
+    listOf(iosArm64(), iosSimulatorArm64(), iosX64()).forEach { target ->
+        target.binaries.framework {
+            baseName = "Shared"
+            isStatic = true
+            xcframework.add(this)
+        }
+    }
 
     sourceSets {
         commonMain.dependencies {

@@ -56,6 +56,15 @@ jobs:
       - name: Build
         run: ./gradlew :app:assembleDebug
 
+      # Compiled only: linking a framework needs a Mac (ios-framework.yml).
+      # Enough for the iOS code not to break in silence.
+      - name: iOS sources
+        run: ./gradlew :shared:compileKotlinIosArm64
+
+      # The Swift ssh client of the iOS app, against the runner's own sshd.
+      - name: iOS ssh client tests
+        run: swift test --package-path iosApp/GliffSSH
+
       - name: Upload the reports
         if: always()
         uses: actions/upload-artifact@v7

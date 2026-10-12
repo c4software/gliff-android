@@ -1,0 +1,71 @@
+name: iOS framework
+
+# Builds Shared.xcframework, the Kotlin side of the iOS app.
+#
+# Kotlin/Native compiles the iOS targets anywhere, but only links an Apple
+# framework on a Mac. The app itself is built from Linux (iosApp, an xtool
+# project), so this is the one step that needs a macOS runner: its artifact is
+# what scripts/fetch-ios-framework.sh downloads into iosApp/Frameworks.
+#
+# Run by hand, on a version tag, and on the ios branch for as long as the port
+# is being written there, when what the framework is made of changes.
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+    branches: [ios]
+    paths:
+      - 'proto/**'
+      - 'transport/**'
+      - 'shared/**'
+      - 'gradle/**'
+      - '*.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/ios-framework.yml'
+
+concurrency:
+  group: ios-framework-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  framework:
+    name: Link Shared.xcframework
+    runs-on: macos-latest
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      # The device and both simulators, release: what the app links against.
+      - name: Link the framework
+        run: ./gradlew :shared:assembleSharedReleaseXCFramework
+
+      # Zipped here: an artifact upload would flatten the bundle's links and modes.
+      - name: Pack it
+        run: |
+          cd shared/build/XCFrameworks/release
+          ls -R Shared.xcframework | head -50
+          ditto -c -k --keepParent Shared.xcframework "$RUNNER_TEMP/Shared.xcframework.zip"
+
+      - name: Upload the framework
+        uses: actions/upload-artifact@v7
+        with:
+          name: Shared.xcframework
+          path: ${{ runner.temp }}/Shared.xcframework.zip
+          retention-days: 90
+          if-no-files-found: error

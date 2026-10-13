@@ -54,6 +54,9 @@ class MirrorServer(
     @Volatile
     private var socket: ServerSocket? = null
 
+    @Volatile
+    private var accepting: Thread? = null
+
     private var width = 0
     private var height = 0
     private var sets: Fmp4.ParameterSets? = null
@@ -73,7 +76,7 @@ class MirrorServer(
         server.reuseAddress = true
         server.bind(InetSocketAddress(port))
         socket = server
-        thread(name = "gliff-mirror", isDaemon = true) {
+        accepting = thread(name = "gliff-mirror", isDaemon = true) {
             try {
                 while (true) {
                     val client = server.accept()
@@ -89,6 +92,10 @@ class MirrorServer(
     fun stop() {
         socket?.let { runCatching { it.close() } }
         socket = null
+        // The port is free once the accepting thread has let go of it: a
+        // server started right behind this one would otherwise find it taken.
+        accepting?.let { runCatching { it.join(STOP_WAIT_MS) } }
+        accepting = null
         synchronized(lock) {
             view = null
             waits++
@@ -327,6 +334,7 @@ class MirrorServer(
         private const val REQUEST_TIMEOUT_MS = 5000
         private const val MAX_REQUEST = 8192
         private const val MAX_SIDE = 16384
+        private const val STOP_WAIT_MS = 2000L
 
         /** How long the remote stays sized for a page whose stream is cut: it comes back within a second. */
         const val VIEW_GRACE_MS = 3000L

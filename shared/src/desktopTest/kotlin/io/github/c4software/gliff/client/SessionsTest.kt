@@ -153,13 +153,37 @@ class SessionsTest {
     }
 
     @Test
+    fun aMachineCanHaveAResolutionOfItsOwn() {
+        settings.update { it.copy(forcedWidth = 1920, forcedHeight = 1080) }
+        machines.save(b.copy(forcedWidth = 0, forcedHeight = 0))
+        val first = sessions.session(a.id)
+        val second = sessions.session(b.id)
+        val pa = peer("a").also { it.handshake(config(1920, 1080)) }
+        val pb = peer("b").also { it.handshake(config(1280, 720)) }
+        first.setWindowSize(1000, 800, 2f)
+        second.setWindowSize(1000, 800, 2f)
+        // The options' resolution for one, its window for the one that says so.
+        assertEquals(ClientMsg.Resize(1920, 1080, 1f), pa.expect())
+        assertEquals(ClientMsg.Resize(1000, 800, 2f), pb.expect())
+        // Changed while the session is open, it is followed at once.
+        machines.save(machines.find(a.id)!!.copy(forcedWidth = 2560, forcedHeight = 1440))
+        assertEquals(ClientMsg.Resize(2560, 1440, 1f), pa.expect())
+        settings.update { it.copy(forcedWidth = 0, forcedHeight = 0) }
+        machines.save(machines.find(b.id)!!.copy(forcedWidth = Machine.INHERIT, forcedHeight = Machine.INHERIT))
+        machines.save(machines.find(a.id)!!.copy(forcedWidth = Machine.INHERIT, forcedHeight = Machine.INHERIT))
+        assertEquals(ClientMsg.Resize(1000, 800, 2f), pa.expect())
+    }
+
+    @Test
     fun theWebViewerSizesTheSessionInFront() {
         val first = sessions.session(a.id)
         val second = sessions.session(b.id)
-        first.setWindowSize(1080, 2200, 2f)
-        second.setWindowSize(1000, 800, 1f)
         val pa = peer("a").also { it.handshake(config(1920, 1080)) }
         val pb = peer("b").also { it.handshake(config(1280, 720)) }
+        // Once connected: from this thread, a size given while the session
+        // connects on another could be asked for twice.
+        first.setWindowSize(1080, 2200, 2f)
+        second.setWindowSize(1000, 800, 1f)
         assertEquals(ClientMsg.Resize(1080, 2200, 2f), pa.expect())
         assertEquals(ClientMsg.Resize(1000, 800, 1f), pb.expect())
 

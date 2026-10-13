@@ -46,10 +46,12 @@ interface Strings {
     val back: String
     val sessionEnded: String
     val options: String
-    val scaleTitle: String
-    val scaleExplain: String
     val scaleAuto: String
     val resolutionTitle: String
+    val resolutionInherit: String
+    val resolutionCustom: String
+    val width: String
+    val height: String
     val resolutionExplain: String
     val keyboardZoom: String
     val keyboardZoomExplain: String
@@ -115,13 +117,14 @@ object English : Strings {
     override val back = "Back"
     override val sessionEnded = "Session ended"
     override val options = "Options"
-    override val scaleTitle = "Display scale"
-    override val scaleExplain = "How large the remote draws on a private screen. Smaller shows more."
     override val scaleAuto = "Auto"
     override val resolutionTitle = "Resolution"
+    override val resolutionInherit = "As in options"
+    override val resolutionCustom = "Custom"
+    override val width = "Width"
+    override val height = "Height"
     override val resolutionExplain =
-        "Auto follows the window. A fixed resolution larger than the screen shows more, fitted in it; " +
-            "the scale then starts from 100 %."
+        "Auto follows the window. A fixed resolution larger than the screen shows more, fitted in it."
     override val keyboardZoom = "Show as much with the keyboard"
     override val keyboardZoomExplain = "Draws the remote smaller while the keyboard is up, instead of cutting the screen."
     override val directTouch = "Tap where you click"
@@ -188,13 +191,14 @@ object French : Strings {
     override val back = "Retour"
     override val sessionEnded = "Session terminée"
     override val options = "Options"
-    override val scaleTitle = "Échelle d'affichage"
-    override val scaleExplain = "Taille du bureau distant en écran privé. Plus petit en montre plus."
     override val scaleAuto = "Auto"
     override val resolutionTitle = "Résolution"
+    override val resolutionInherit = "Comme les options"
+    override val resolutionCustom = "Autre"
+    override val width = "Largeur"
+    override val height = "Hauteur"
     override val resolutionExplain =
-        "Auto suit la fenêtre. Une résolution fixe plus grande que l'écran en montre plus, ajustée dedans ; " +
-            "l'échelle part alors de 100 %."
+        "Auto suit la fenêtre. Une résolution fixe plus grande que l'écran en montre plus, ajustée dedans."
     override val keyboardZoom = "En montrer autant avec le clavier"
     override val keyboardZoomExplain = "Dessine le bureau plus petit quand le clavier est ouvert, au lieu de couper l'écran."
     override val directTouch = "Cliquer là où l'on touche"

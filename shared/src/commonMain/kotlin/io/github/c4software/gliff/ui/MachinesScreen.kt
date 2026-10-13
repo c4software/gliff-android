@@ -217,6 +217,10 @@ fun MachineDialog(initial: Machine?, strings: Strings, onDismiss: () -> Unit, on
     var headless by remember { mutableStateOf(initial?.headless ?: true) }
     var output by remember { mutableStateOf(initial?.output ?: "") }
     var serverBin by remember { mutableStateOf(initial?.serverBin ?: Machine.DEFAULT_SERVER_BIN) }
+    // This machine's own resolution: as the options say, the window's, or a fixed one.
+    var forced by remember {
+        mutableStateOf((initial?.forcedWidth ?: Machine.INHERIT) to (initial?.forcedHeight ?: Machine.INHERIT))
+    }
     var showError by remember { mutableStateOf(false) }
     val parsed = Machine.parseAddress(address)
 
@@ -224,7 +228,7 @@ fun MachineDialog(initial: Machine?, strings: Strings, onDismiss: () -> Unit, on
         onDismissRequest = onDismiss,
         title = { Text(if (initial == null) strings.addMachine else strings.editMachine) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = address,
                     onValueChange = { address = it },
@@ -258,6 +262,12 @@ fun MachineDialog(initial: Machine?, strings: Strings, onDismiss: () -> Unit, on
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(strings.resolutionTitle, style = MaterialTheme.typography.titleSmall)
+                    ResolutionPicker(forced.first, forced.second, inherit = true, strings) { width, height ->
+                        forced = width to height
+                    }
+                }
                 OutlinedTextField(
                     value = serverBin,
                     onValueChange = { serverBin = it },
@@ -285,6 +295,8 @@ fun MachineDialog(initial: Machine?, strings: Strings, onDismiss: () -> Unit, on
                         headless = headless,
                         output = output.trim(),
                         serverBin = serverBin.trim().ifEmpty { Machine.DEFAULT_SERVER_BIN },
+                        forcedWidth = forced.first,
+                        forcedHeight = forced.second,
                         hostKey = if (sameHost) base.hostKey else null,
                     )
                 )
@@ -340,43 +352,14 @@ fun SettingsDialog(
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(strings.scaleTitle, style = MaterialTheme.typography.titleSmall)
-                    Text(
-                        strings.scaleExplain,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(settings.scale == 0f, onClick = { onChange(settings.copy(scale = 0f)) }, label = { Text(strings.scaleAuto) })
-                        for (scale in Settings.SCALES) {
-                            FilterChip(
-                                settings.scale == scale,
-                                onClick = { onChange(settings.copy(scale = scale)) },
-                                label = { Text("${(scale * 100).toInt()} %") },
-                            )
-                        }
-                    }
-                }
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(strings.resolutionTitle, style = MaterialTheme.typography.titleSmall)
                     Text(
                         strings.resolutionExplain,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(
-                            settings.forced == null,
-                            onClick = { onChange(settings.copy(forcedWidth = 0, forcedHeight = 0)) },
-                            label = { Text(strings.scaleAuto) },
-                        )
-                        for ((width, height) in Settings.RESOLUTIONS) {
-                            FilterChip(
-                                settings.forcedWidth == width && settings.forcedHeight == height,
-                                onClick = { onChange(settings.copy(forcedWidth = width, forcedHeight = height)) },
-                                label = { Text("$width × $height") },
-                            )
-                        }
+                    ResolutionPicker(settings.forcedWidth, settings.forcedHeight, inherit = false, strings) { width, height ->
+                        onChange(settings.copy(forcedWidth = width, forcedHeight = height))
                     }
                 }
                 Toggle(strings.keyboardZoom, strings.keyboardZoomExplain, settings.keyboardZoom) {
@@ -415,6 +398,76 @@ fun SettingsDialog(
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(strings.close) } },
     )
+}
+
+/**
+ * A resolution: the window's own, one of the usual ones, or any typed by
+ * hand. `inherit` adds the choice of leaving it to the options, for a machine.
+ */
+@Composable
+private fun ResolutionPicker(
+    width: Int,
+    height: Int,
+    inherit: Boolean,
+    strings: Strings,
+    onChange: (width: Int, height: Int) -> Unit,
+) {
+    var custom by remember {
+        mutableStateOf(width > 0 && height > 0 && Settings.RESOLUTIONS.none { it.first == width && it.second == height })
+    }
+    var typedWidth by remember { mutableStateOf(if (custom) width.toString() else "") }
+    var typedHeight by remember { mutableStateOf(if (custom) height.toString() else "") }
+    // Kept as it was until both sides make a resolution.
+    fun typed() {
+        val w = typedWidth.toIntOrNull()?.takeIf { it in Settings.SIDES } ?: return
+        val h = typedHeight.toIntOrNull()?.takeIf { it in Settings.SIDES } ?: return
+        onChange(w, h)
+    }
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        val choices = listOfNotNull(
+            if (inherit) strings.resolutionInherit to (Machine.INHERIT to Machine.INHERIT) else null,
+            strings.scaleAuto to (0 to 0),
+        ) + Settings.RESOLUTIONS.map { "${it.first} × ${it.second}" to it }
+        for ((label, size) in choices) {
+            FilterChip(
+                !custom && size == (width to height),
+                onClick = {
+                    custom = false
+                    onChange(size.first, size.second)
+                },
+                label = { Text(label) },
+            )
+        }
+        FilterChip(
+            custom,
+            onClick = {
+                custom = true
+                typed()
+            },
+            label = { Text(strings.resolutionCustom) },
+        )
+    }
+    if (custom) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            for (side in 0..1) {
+                val text = if (side == 0) typedWidth else typedHeight
+                OutlinedTextField(
+                    value = text,
+                    onValueChange = { new ->
+                        val digits = new.filter(Char::isDigit).take(4)
+                        if (side == 0) typedWidth = digits else typedHeight = digits
+                        typed()
+                    },
+                    label = { Text(if (side == 0) strings.width else strings.height) },
+                    singleLine = true,
+                    isError = text.isNotEmpty() && text.toIntOrNull() !in Settings.SIDES,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.weight(1f),
+                )
+                if (side == 0) Text("×")
+            }
+        }
+    }
 }
 
 @Composable

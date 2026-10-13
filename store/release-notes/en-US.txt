@@ -1,3 +1,3 @@
-• Display scale from 50 % and a fixed resolution, to see more.
-• Web mirror: the desktop takes the size of the browser's window, and the device's screen can go black meanwhile.
-• Web mirror: a row of keys (Esc, Tab, Ctrl, Alt, Super) to put on any edge, full screen with the system keys, showing on another screen and installing as an application (Chrome, secure origin).
+• The remote desktop's resolution is yours to choose, for every machine or for one: the window's, a usual one, or any other typed by hand.
+• Web mirror: the desktop takes the size of the browser's window, with a row of keys (Esc, Tab, Ctrl, Alt, Super, full screen) to put on any edge.
+• Shortcuts to the machines under a long press on the icon, and an adaptive icon.

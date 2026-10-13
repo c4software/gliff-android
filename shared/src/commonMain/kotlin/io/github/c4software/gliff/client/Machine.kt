@@ -20,6 +20,12 @@ data class Machine(
     val output: String = "",
     /** Remote `gliff-server` path; the default expects it on `PATH`. */
     val serverBin: String = DEFAULT_SERVER_BIN,
+    /**
+     * This machine's own resolution, long side first: 0 follows the window,
+     * and [INHERIT] takes what the options say for every machine.
+     */
+    val forcedWidth: Int = INHERIT,
+    val forcedHeight: Int = INHERIT,
     /** Fingerprint of the host key trusted on first use. */
     val hostKey: String? = null,
 ) {
@@ -35,6 +41,7 @@ data class Machine(
 
     companion object {
         const val DEFAULT_SERVER_BIN = "gliff-server"
+        const val INHERIT = -1
 
         fun newId(): String = Random.nextLong().toULong().toString(16)
 

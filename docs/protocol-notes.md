@@ -137,26 +137,32 @@ gliff code is authoritative; these notes say where to look.
   from the server when the viewer arrives. Read-only unless the "control from
   the browser" option is on: the page then posts its mouse and keyboard events
   to `/<token>/input` (`BrowserInput`).
-- **Fixed resolution**: the option sends a `Resize` of that size, turned the
-  way of the window, at scale 1 unless a scale is chosen. It is the way under
-  the server's floor of 0.5 for the scale: a picture larger than the screen,
-  fitted in it. It also holds for the web mirror's viewer.
+- **Fixed resolution**: instead of a display scale, which the server floors
+  at 0.5, the options (and each machine, over them) can hold the remote to a
+  resolution: a `Resize` of that size, turned the way of the window, at scale
+  1. Larger than the screen, the picture shows more, fitted in it. It also
+  holds for the web mirror's viewer. Without one, the remote follows the
+  window at the device's density, as before.
 - **Web mirror, size**: the page posts its window to `/<token>/view`
   (`WIDTH HEIGHT SCALE`, device pixels and `devicePixelRatio`), and the
   session in front sends that as its `Resize` instead of the device's window,
   until no viewer has been there for 3 s. The browser's zoom changes
   `devicePixelRatio`, hence the remote's scale. The new `StreamConfig` drops
   the viewers, who reconnect within the grace time.
-- **Web mirror, as an application**: the page has a manifest and a full
-  screen button that calls `navigator.keyboard.lock()`. Chromium only, and
+- **Web mirror, as an application**: the page has a manifest and, in its row
+  of keys, a full screen button that calls `navigator.keyboard.lock()`. Chromium only, and
   only on a secure origin: `http://localhost` through a forwarded port, or
   the address listed in `chrome://flags/#unsafely-treat-insecure-origin-as-secure`.
   Serving HTTPS from the device would need a certificate browsers trust.
 - **Web mirror, keys and other screens**: with control on, the page has a
   row of keys (Esc, Tab, and Ctrl, Alt, Super armed for the next key), for
   what the viewer's machine would keep; it snaps to an edge of the window and
-  shows only with a session. A button shows the page on another screen
-  through the Presentation API (secure origins only), not tried on a device.
+  shows only with a session.
+- **Web mirror, casting**: the page does not offer it. The Presentation API
+  finds no screen for a plain page (a Chromecast only opens a receiver
+  application), Remote Playback does not take a Media Source video, and the
+  stock Cast receiver given the address of the stream loaded for ever. The
+  browser's own "cast tab" mirrors the page as it is.
 - **Web mirror, dark screen**: an application cannot turn the screen off and
   keep running in front. The option draws black at the lowest brightness
   instead, which lights nothing on an OLED. Letting the device really sleep

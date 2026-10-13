@@ -70,11 +70,11 @@ class MachineTest {
     fun settingsAreKeptAndSurviveNewFields() {
         val store = MemoryStore()
         assertEquals(Settings(), SettingsRepository(store).settings.value)
-        SettingsRepository(store).update { it.copy(scale = 1.5f, httpMirror = true, mirrorToken = "abc") }
-        assertEquals(Settings(scale = 1.5f, httpMirror = true, mirrorToken = "abc"), SettingsRepository(store).settings.value)
+        SettingsRepository(store).update { it.copy(forcedWidth = 1600, forcedHeight = 900, httpMirror = true, mirrorToken = "abc") }
+        assertEquals(Settings(forcedWidth = 1600, forcedHeight = 900, httpMirror = true, mirrorToken = "abc"), SettingsRepository(store).settings.value)
         // Written by another version of the app: what is known is kept, the rest ignored.
-        store.set("settings", """{"scale":2.0,"somethingNew":1}""")
-        assertEquals(Settings(scale = 2f), SettingsRepository(store).settings.value)
+        store.set("settings", """{"forcedWidth":1280,"forcedHeight":720,"scale":2.0,"somethingNew":1}""")
+        assertEquals(Settings(forcedWidth = 1280, forcedHeight = 720), SettingsRepository(store).settings.value)
         store.set("settings", "not json")
         assertEquals(Settings(), SettingsRepository(store).settings.value)
     }

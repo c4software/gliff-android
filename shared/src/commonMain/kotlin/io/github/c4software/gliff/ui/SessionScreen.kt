@@ -131,14 +131,14 @@ fun SessionScreen(
     strings: Strings = rememberStrings(),
 ) {
     val state by controller.state.collectAsState()
-    val density = if (settings.scale > 0f) settings.scale else LocalDensity.current.density
+    val density = LocalDensity.current.density
     SessionContent(
         state = state,
         address = controller.machine?.address.orEmpty(),
         strings = strings,
         onSize = { w, h, zoom ->
             // An imposed resolution stays as it is under the keyboard, and laid as the whole window was.
-            if (settings.forced == null || zoom >= 1f) {
+            if (settings.forcedFor(controller.machine) == null || zoom >= 1f) {
                 controller.setWindowSize(w, h, if (settings.keyboardZoom) density * zoom else density)
             }
         },

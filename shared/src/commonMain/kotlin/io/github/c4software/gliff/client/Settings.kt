@@ -10,8 +10,6 @@ import kotlinx.serialization.json.Json
 /** What the user chose for every machine. */
 @Serializable
 data class Settings(
-    /** The remote's display scale; 0 follows this device's own, or is 1 at an imposed resolution. */
-    val scale: Float = 0f,
     /** The resolution imposed on the remote, long side first; 0 follows the window. */
     val forcedWidth: Int = 0,
     val forcedHeight: Int = 0,
@@ -32,16 +30,27 @@ data class Settings(
     /** The secret part of the mirror's address. */
     val mirrorToken: String = "",
 ) {
-    /** The resolution and scale the remote is held to, null when it follows the window. */
-    val forced: Viewport?
-        get() = if (forcedWidth > 0 && forcedHeight > 0) Viewport(forcedWidth, forcedHeight, if (scale > 0f) scale else 1f) else null
+    /**
+     * The resolution the remote is held to, null when it follows the window.
+     * A pixel of it is a pixel of the remote: how much shows is the
+     * resolution's to say, not a display scale's.
+     */
+    val forced: Viewport? get() = forced(forcedWidth, forcedHeight)
+
+    /** The same for `machine`, which may have a resolution of its own, or none where the options have one. */
+    fun forcedFor(machine: Machine?): Viewport? =
+        if (machine == null || machine.forcedWidth < 0 || machine.forcedHeight < 0) forced
+        else forced(machine.forcedWidth, machine.forcedHeight)
+
+    private fun forced(width: Int, height: Int): Viewport? =
+        if (width > 0 && height > 0) Viewport(width, height, 1f) else null
 
     companion object {
-        /** The scales offered; anything else the compositor would round anyway. */
         /** The resolutions offered besides the window's own. */
         val RESOLUTIONS = listOf(1280 to 720, 1920 to 1080, 2560 to 1440, 3840 to 2160)
 
-        val SCALES = listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f, 2.5f, 3f)
+        /** The sides a resolution typed by hand may have. */
+        val SIDES = 240..8192
     }
 }
 

@@ -3,8 +3,7 @@ package io.github.c4software.gliff.client
 import io.github.c4software.gliff.mirror.Viewport
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
@@ -65,11 +64,12 @@ class Sessions(
         }
 
     init {
-        // A resolution imposed in the options holds for every session, open or
-        // to come. Below what it reads: an immediate dispatcher runs it here.
+        // A resolution imposed in the options, or on a machine, holds for the
+        // sessions open and to come. Below what it reads: an immediate
+        // dispatcher runs it here.
         scope.launch {
-            settings.settings.map { it.forced }.distinctUntilChanged().collect { mode ->
-                entries.values.forEach { it.controller.setForced(mode) }
+            combine(settings.settings, machines.machines) { options, _ -> options }.collect { options ->
+                entries.values.forEach { it.controller.setForced(options.forcedFor(it.controller.machine)) }
             }
         }
     }
@@ -104,7 +104,7 @@ class Sessions(
             nowMs = nowMs,
         )
         entries = entries + (machineId to Entry(controller, tap))
-        controller.setForced(settings.settings.value.forced)
+        controller.setForced(settings.settings.value.forcedFor(controller.machine))
         if (frontId == machineId) controller.setViewer(viewport)
         controller.start()
         scope.launch {

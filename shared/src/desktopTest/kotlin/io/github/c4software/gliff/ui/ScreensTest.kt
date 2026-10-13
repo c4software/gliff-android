@@ -124,7 +124,7 @@ class ScreensTest {
         shot("options-fr", 820, 1700) {
             Machines(machines, French)
             SettingsDialog(
-                Settings(scale = 1.5f, httpMirror = true, mirrorToken = "k7f3q2mxp9"),
+                Settings(forcedWidth = 1920, forcedHeight = 1080, httpMirror = true, mirrorToken = "k7f3q2mxp9"),
                 listOf("http://192.168.1.42:8765/k7f3q2mxp9/", "http://100.101.102.103:8765/k7f3q2mxp9/"),
                 French, onChange = {}, onDismiss = {},
             )

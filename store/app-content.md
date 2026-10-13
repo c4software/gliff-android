@@ -77,6 +77,6 @@ Meant to be published on GitHub Pages by
 repository:
 
 ```
-https://c4software.github.io/gliff-android/privacy-en.html
-https://c4software.github.io/gliff-android/privacy-fr.html
+https://c4software.github.io/gliff-client/privacy-en.html
+https://c4software.github.io/gliff-client/privacy-fr.html
 ```

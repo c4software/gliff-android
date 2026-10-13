@@ -78,5 +78,5 @@ repository, together with the version it applies to.
 ## Contact
 
 Questions or requests: open an issue on
-<https://github.com/c4software/gliff-android/issues>, or write to
+<https://github.com/c4software/gliff-client/issues>, or write to
 <c4software@gmail.com>.

@@ -50,6 +50,6 @@ LIMITES CONNUES
 CODE OUVERT
 
 Licence MIT. Le code source complet est public :
-https://github.com/c4software/gliff-android
+https://github.com/c4software/gliff-client
 
 gliff est un projet libre de Kevin McConnell. Cette application est un client indépendant, sans affiliation avec les projets gliff, Omarchy ou Hyprland, ni approbation ni parrainage de leur part.

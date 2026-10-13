@@ -84,5 +84,5 @@ l'application, avec la version à laquelle elle s'applique.
 ## Contact
 
 Questions ou demandes : ouvrez un ticket sur
-<https://github.com/c4software/gliff-android/issues>, ou écrivez à
+<https://github.com/c4software/gliff-client/issues>, ou écrivez à
 <c4software@gmail.com>.

@@ -152,6 +152,11 @@ gliff code is authoritative; these notes say where to look.
   only on a secure origin: `http://localhost` through a forwarded port, or
   the address listed in `chrome://flags/#unsafely-treat-insecure-origin-as-secure`.
   Serving HTTPS from the device would need a certificate browsers trust.
+- **Web mirror, keys and other screens**: with control on, the page has a
+  row of keys (Esc, Tab, and Ctrl, Alt, Super armed for the next key), for
+  what the viewer's machine would keep; it snaps to an edge of the window and
+  shows only with a session. A button shows the page on another screen
+  through the Presentation API (secure origins only), not tried on a device.
 - **Web mirror, dark screen**: an application cannot turn the screen off and
   keep running in front. The option draws black at the lowest brightness
   instead, which lights nothing on an OLED. Letting the device really sleep

@@ -1,3 +1,3 @@
 • Échelle d'affichage dès 50 % et résolution fixe, pour en voir plus.
 • Miroir web : le bureau prend la taille de la fenêtre du navigateur, l'écran de l'appareil peut passer au noir pendant ce temps.
-• Miroir web : plein écran avec les touches système, et page installable comme application (Chrome, origine sécurisée).
+• Miroir web : barre de touches (Esc, Tab, Ctrl, Alt, Super) à placer sur un bord, plein écran avec les touches système, diffusion sur un autre écran et installation comme application (Chrome, origine sécurisée).

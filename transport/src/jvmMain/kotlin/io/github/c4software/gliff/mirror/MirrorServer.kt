@@ -30,8 +30,7 @@ import kotlin.concurrent.thread
  * application, and a full screen button that also asks for every key (Escape,
  * Super, the window manager's shortcuts). Browsers grant both to secure
  * origins only, which plain HTTP is when reached as `localhost`. Anywhere
- * else, the page's row of keys sends what the viewer's machine keeps. On a
- * secure origin again, a button shows the page on another screen.
+ * else, the page's row of keys sends what the viewer's machine keeps.
  *
  * A viewer starts on a keyframe, so `onViewer` asks the session for one. When
  * the stream's parameters change the viewers are dropped, and the page
@@ -379,10 +378,6 @@ class MirrorServer(
 <style>
 html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
 video { width: 100%; height: 100%; object-fit: contain; display: block; }
-#full, #cast { position: fixed; top: 12px; right: 12px; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 8px; background: #223; color: #cde; font: 20px system-ui, sans-serif; opacity: .3; cursor: pointer; }
-#cast { right: 56px; width: auto; padding: 0 10px; font-size: 14px; }
-#full:hover, #cast:hover { opacity: 1; }
-.shown #full, .shown #cast, .shown #bar, .shown #hint { display: none; }
 #bar { position: fixed; display: flex; gap: 6px; opacity: .3; transition: left .15s, top .15s; }
 #bar.upright { flex-direction: column; }
 #bar.upright #grip { width: auto; height: 20px; line-height: 20px; }
@@ -392,6 +387,7 @@ html:not(.live) #bar { display: none; }
 #bar[hidden] { display: none; }
 #bar button { height: 36px; padding: 0 12px; border: 0; border-radius: 8px; background: #223; color: #cde; font: 14px system-ui, sans-serif; cursor: pointer; }
 #bar button.on { background: #8fb4ff; color: #101319; }
+#bar #full { padding: 0 10px; font-size: 18px; }
 #grip { width: 20px; height: 36px; line-height: 36px; text-align: center; color: #cde; font: 16px system-ui, sans-serif; cursor: move; user-select: none; touch-action: none; }
 #hint { position: fixed; left: 0; right: 0; top: 16px; text-align: center; color: #fc8; font: 14px system-ui, sans-serif; }
 #note { position: fixed; left: 0; right: 0; bottom: 64px; text-align: center; color: #9aa; font: 14px system-ui, sans-serif; }
@@ -400,13 +396,12 @@ html:not(.live) #bar { display: none; }
 <body>
 <video id="video" muted autoplay playsinline></video>
 <div id="note">Waiting for the session…</div>
-<button id="full" title="Full screen" hidden>⛶</button>
-<button id="cast" title="Show on another screen" hidden>Cast</button>
 <div id="hint" hidden></div>
 <div id="bar" hidden>
 <span id="grip" title="Move">⠿</span>
 <button data-key="Escape">Esc</button><button data-key="Tab">Tab</button>
 <button data-mod="1">Ctrl</button><button data-mod="2">Alt</button><button data-mod="4">Super</button>
+<button id="full" title="Full screen">⛶</button>
 </div>
 <script>
 const video = document.getElementById('video');
@@ -485,22 +480,6 @@ function tellSize(again) {
 let resized = 0;
 window.addEventListener('resize', () => { clearTimeout(resized); resized = setTimeout(tellSize, 300); });
 
-// Full screen, where the browser can then hand over the keys it keeps for
-// itself and for the system. It only does so on a secure origin.
-const full = document.getElementById('full');
-full.hidden = !document.fullscreenEnabled;
-full.addEventListener('click', () => { document.documentElement.requestFullscreen().catch(() => {}); });
-document.addEventListener('fullscreenchange', () => {
-  const on = !!document.fullscreenElement;
-  full.hidden = on;
-  const lock = navigator.keyboard && navigator.keyboard.lock;
-  if (on && lock) navigator.keyboard.lock().catch(() => say('The browser refused to hand over the system keys.'));
-  else if (lock) navigator.keyboard.unlock();
-  // Said rather than left to be found out: Super and the like then act on this machine too.
-  else if (on) say(window.isSecureContext
-    ? 'This browser keeps the system keys (Super, Alt+Tab…) for this machine. Chrome hands them over.'
-    : 'System keys (Super, Alt+Tab…) stay with this machine: the page must be opened as http://localhost, in Chrome.');
-});
 const hint = document.getElementById('hint');
 let hinted = 0;
 function say(text) {
@@ -510,20 +489,84 @@ function say(text) {
   hinted = setTimeout(() => { hint.hidden = true; }, 8000);
 }
 
-// On another screen (a Chromecast, a television): the browser opens this page
-// a second time for it, and that copy is a viewer like any other, without
-// the buttons. Secure origins only, as for the keys.
-const cast = document.getElementById('cast');
-if (navigator.presentation && navigator.presentation.receiver) document.documentElement.classList.add('shown');
-cast.hidden = !window.PresentationRequest;
-cast.addEventListener('click', () => {
-  new PresentationRequest([location.href]).start().catch(e => {
-    if (e.name !== 'NotAllowedError' && e.name !== 'AbortError') say('No screen to show this on.');
-  });
+const CONTROL = false;
+
+// The floating row: full screen, and with control the keys this machine
+// would keep for itself. It shows with a session.
+const bar = document.getElementById('bar');
+const full = document.getElementById('full');
+full.hidden = !document.fullscreenEnabled;
+if (!CONTROL) bar.querySelectorAll('[data-key], [data-mod]').forEach(b => { b.hidden = true; });
+bar.hidden = !CONTROL && full.hidden;
+// The keyboard stays with the page, not with a button.
+bar.addEventListener('mousedown', e => e.preventDefault());
+
+// Full screen, where the browser can then hand over the keys it keeps for
+// itself and for the system. It only does so on a secure origin.
+full.addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {});
+});
+document.addEventListener('fullscreenchange', () => {
+  const on = !!document.fullscreenElement;
+  full.classList.toggle('on', on);
+  const lock = navigator.keyboard && navigator.keyboard.lock;
+  if (on && lock) navigator.keyboard.lock().catch(() => say('The browser refused to hand over the system keys.'));
+  else if (lock) navigator.keyboard.unlock();
+  // Said rather than left to be found out: Super and the like then act on this machine too.
+  else if (on && CONTROL) say(window.isSecureContext
+    ? 'This browser keeps the system keys (Super, Alt+Tab…) for this machine. Chrome hands them over.'
+    : 'System keys (Super, Alt+Tab…) stay with this machine: the page must be opened as http://localhost, in Chrome.');
 });
 
-const CONTROL = false;
-if (CONTROL && !document.documentElement.classList.contains('shown')) {
+// The row is dragged by its grip and let go against the nearest edge of the
+// window, upright on the sides. Where along that edge is kept as a fraction,
+// whatever size the window has; near the middle is the middle.
+const grip = document.getElementById('grip');
+const GAP = 12;
+let dragging = null;
+let spot = null;
+function put() {
+  const side = spot ? spot.side : 'bottom', at = spot ? spot.at : 0.5;
+  const upright = side === 'left' || side === 'right';
+  bar.classList.toggle('upright', upright);
+  const w = bar.offsetWidth, h = bar.offsetHeight;
+  const along = (length, size) => Math.max(Math.min(at * length - size / 2, length - size - GAP), GAP);
+  bar.style.left = (upright ? (side === 'left' ? GAP : innerWidth - w - GAP) : along(innerWidth, w)) + 'px';
+  bar.style.top = (upright ? along(innerHeight, h) : (side === 'top' ? GAP : innerHeight - h - GAP)) + 'px';
+}
+try { spot = JSON.parse(localStorage.getItem('gliff-bar')); } catch (e) {}
+if (!spot || !['top', 'bottom', 'left', 'right'].includes(spot.side) || !isFinite(spot.at)) spot = null;
+// It has no size to be placed by until it shows, with the session.
+onLive = put;
+put();
+window.addEventListener('resize', put);
+grip.addEventListener('pointerdown', e => {
+  grip.setPointerCapture(e.pointerId);
+  const box = bar.getBoundingClientRect();
+  dragging = { dx: e.clientX - box.left, dy: e.clientY - box.top };
+  bar.classList.add('held');
+});
+grip.addEventListener('pointermove', e => {
+  if (!dragging) return;
+  bar.style.left = Math.max(Math.min(e.clientX - dragging.dx, innerWidth - bar.offsetWidth), 0) + 'px';
+  bar.style.top = Math.max(Math.min(e.clientY - dragging.dy, innerHeight - bar.offsetHeight), 0) + 'px';
+});
+grip.addEventListener('pointerup', () => {
+  if (!dragging) return;
+  dragging = null;
+  bar.classList.remove('held');
+  const box = bar.getBoundingClientRect();
+  const x = box.left + box.width / 2, y = box.top + box.height / 2;
+  const near = { left: x, right: innerWidth - x, top: y, bottom: innerHeight - y };
+  const side = Object.keys(near).reduce((a, b) => near[b] < near[a] ? b : a);
+  let at = side === 'left' || side === 'right' ? y / innerHeight : x / innerWidth;
+  if (Math.abs(at - 0.5) < 0.1) at = 0.5;
+  spot = { side, at };
+  put();
+  try { localStorage.setItem('gliff-bar', JSON.stringify(spot)); } catch (e) {}
+});
+
+if (CONTROL) {
   const queue = [];
   let busy = false;
   // One request at a time, so events arrive in the order they happened.
@@ -554,22 +597,18 @@ if (CONTROL && !document.documentElement.classList.contains('shown')) {
   }
   function move(e) { if (dragging) return null; const m = place(e); if (m) push(m); return m; }
   window.addEventListener('mousemove', move);
-  // The keys this machine would keep for itself, as on the device: Ctrl, Alt
-  // and Super are armed by a click and spent on the next key.
-  const bar = document.getElementById('bar');
-  bar.hidden = false;
+  // As on the device: Ctrl, Alt and Super are armed by a click and spent on
+  // the next key.
   let armed = 0;
   function spend() {
     const mods = armed;
     armed = 0;
-    bar.querySelectorAll('.on').forEach(b => b.classList.remove('on'));
+    bar.querySelectorAll('[data-mod].on').forEach(b => b.classList.remove('on'));
     return mods;
   }
-  // The keyboard stays with the page, not with a button.
-  bar.addEventListener('mousedown', e => e.preventDefault());
   bar.addEventListener('click', e => {
     const button = e.target.closest('button');
-    if (!button) return;
+    if (!button || button === full) return;
     if (button.dataset.mod) {
       armed ^= +button.dataset.mod;
       button.classList.toggle('on');
@@ -577,57 +616,7 @@ if (CONTROL && !document.documentElement.classList.contains('shown')) {
       push('s ' + spend() + ' ' + button.dataset.key);
     }
   });
-  // The row is dragged by its grip and let go against the nearest edge of the
-  // window, upright on the sides. Where along that edge is kept as a fraction,
-  // whatever size the window has; near the middle is the middle.
-  const grip = document.getElementById('grip');
-  const GAP = 12;
-  let dragging = null;
-  let spot = null;
-  function put() {
-    const side = spot ? spot.side : 'bottom', at = spot ? spot.at : 0.5;
-    const upright = side === 'left' || side === 'right';
-    bar.classList.toggle('upright', upright);
-    const w = bar.offsetWidth, h = bar.offsetHeight;
-    // Clear of the buttons in the top right corner.
-    const along = (length, size, from, to) => Math.max(Math.min(at * length - size / 2, to - size), from);
-    bar.style.left = (upright ? (side === 'left' ? GAP : innerWidth - w - GAP)
-      : along(innerWidth, w, GAP, innerWidth - (side === 'top' ? 120 : GAP))) + 'px';
-    bar.style.top = (upright ? along(innerHeight, h, side === 'right' ? 60 : GAP, innerHeight - GAP)
-      : (side === 'top' ? GAP : innerHeight - h - GAP)) + 'px';
-  }
-  try { spot = JSON.parse(localStorage.getItem('gliff-bar')); } catch (e) {}
-  if (!spot || !['top', 'bottom', 'left', 'right'].includes(spot.side) || !isFinite(spot.at)) spot = null;
-  // It has no size to be placed by until it shows, with the session.
-  onLive = put;
-  put();
-  window.addEventListener('resize', put);
-  grip.addEventListener('pointerdown', e => {
-    grip.setPointerCapture(e.pointerId);
-    const box = bar.getBoundingClientRect();
-    dragging = { dx: e.clientX - box.left, dy: e.clientY - box.top };
-    bar.classList.add('held');
-  });
-  grip.addEventListener('pointermove', e => {
-    if (!dragging) return;
-    bar.style.left = Math.max(Math.min(e.clientX - dragging.dx, innerWidth - bar.offsetWidth), 0) + 'px';
-    bar.style.top = Math.max(Math.min(e.clientY - dragging.dy, innerHeight - bar.offsetHeight), 0) + 'px';
-  });
-  grip.addEventListener('pointerup', () => {
-    if (!dragging) return;
-    dragging = null;
-    bar.classList.remove('held');
-    const box = bar.getBoundingClientRect();
-    const x = box.left + box.width / 2, y = box.top + box.height / 2;
-    const near = { left: x, right: innerWidth - x, top: y, bottom: innerHeight - y };
-    const side = Object.keys(near).reduce((a, b) => near[b] < near[a] ? b : a);
-    let at = side === 'left' || side === 'right' ? y / innerHeight : x / innerWidth;
-    if (Math.abs(at - 0.5) < 0.1) at = 0.5;
-    spot = { side, at };
-    put();
-    try { localStorage.setItem('gliff-bar', JSON.stringify(spot)); } catch (e) {}
-  });
-  const ours = e => e.target.closest && e.target.closest('#bar, #full, #cast');
+  const ours = e => e.target.closest && e.target.closest('#bar');
   window.addEventListener('mousedown', e => { if (ours(e)) return; if (move(e)) push('b ' + e.button + ' 1'); e.preventDefault(); });
   window.addEventListener('mouseup', e => { if (ours(e)) return; if (move(e)) push('b ' + e.button + ' 0'); e.preventDefault(); });
   window.addEventListener('contextmenu', e => e.preventDefault());

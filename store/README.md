@@ -108,7 +108,7 @@ The machines, fingerprints and addresses in them are made up. To be redone
 after any change to the interface.
 
 Icon and feature graphics: the launcher icon's vector paths
-(`app/src/main/res/drawable/ic_launcher.xml`) rendered with `rsvg-convert`,
+(`app/src/main/res/drawable/ic_launcher_foreground.xml`, on `#101319`) rendered with `rsvg-convert`,
 with the title set in Noto Sans.
 
 ## Still missing, and why

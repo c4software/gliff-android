@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    For themed icons: one colour, which the launcher chooses. The screen in
+    front is a frame, and the one behind stops short of it, where the
+    coloured icon tells them apart by their shades.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Three quarters of the drawing's size, about its own middle, moved to the icon's. -->
+    <group
+        android:pivotX="54"
+        android:pivotY="53"
+        android:scaleX="0.75"
+        android:scaleY="0.75"
+        android:translateY="1">
+        <path android:fillColor="#FFFFFF" android:pathData="M40,30h40a4,4 0,0 1,4 4v26a4,4 0,0 1,-4 4h-6v-18a6,6 0,0 0,-6 -6h-32v-6a4,4 0,0 1,4 -4z" />
+        <path android:fillColor="#FFFFFF" android:fillType="evenOdd" android:pathData="M28,42h40a4,4 0,0 1,4 4v26a4,4 0,0 1,-4 4h-40a4,4 0,0 1,-4 -4v-26a4,4 0,0 1,4 -4zM29,47v24h38v-24z" />
+    </group>
+</vector>

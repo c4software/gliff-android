@@ -124,7 +124,11 @@ class MirrorTest {
             assertEquals(302 to "/s3cret/", get(port, "/s3cret"))
             val (code, page) = get(port, "/s3cret/")
             assertEquals(200, code)
-            assertTrue("<video" in page && "fetch('stream'" in page)
+            assertTrue("<video" in page && "fetch('stream'" in page && "fetch('view'" in page)
+            // What installs it as an application sits behind the token too.
+            assertTrue("\"start_url\"" in get(port, "/s3cret/manifest.json").second)
+            assertTrue("<svg" in get(port, "/s3cret/icon.svg").second)
+            assertEquals(404, get(port, "/manifest.json").first)
         } finally {
             server.stop()
         }
@@ -163,6 +167,39 @@ class MirrorTest {
             assertTrue("CONTROL = true" in get(port, "/tok/").second)
         } finally {
             controlled.stop()
+        }
+    }
+
+    @Test
+    fun thePageWindowIsKeptWhileSomeoneWatches() {
+        val port = java.net.ServerSocket(0).use { it.localPort }
+        val views = java.util.concurrent.LinkedBlockingQueue<String>()
+        val server = MirrorServer(port, "t", onViewer = {}, onView = { views.add(it?.toString() ?: "gone") }, viewGraceMs = 300)
+        server.start()
+        try {
+            assertEquals(404, post(port, "/nope/view", "2560 1440 1"))
+            // Read-only pages say it too; nonsense is skipped.
+            for (junk in listOf("", "2560 1440", "0 1440 1", "2560 1440 NaN", "2560 1440 -1", "a b c")) {
+                assertEquals(200, post(port, "/t/view", junk))
+            }
+            assertNull(views.poll(100, TimeUnit.MILLISECONDS))
+            Socket("127.0.0.1", port).use { socket ->
+                socket.soTimeout = 5000
+                socket.getOutputStream().write("GET /t/stream HTTP/1.1\r\nHost: x\r\n\r\n".toByteArray())
+                assertEquals('H'.code, socket.getInputStream().read())
+                assertEquals(200, post(port, "/t/view", "2560 1440 1.250"))
+                assertEquals(Viewport(2560, 1440, 1.25f).toString(), views.poll(3, TimeUnit.SECONDS))
+                // It stays as long as the stream is read.
+                assertNull(views.poll(600, TimeUnit.MILLISECONDS))
+            }
+            assertEquals("gone", views.poll(3, TimeUnit.SECONDS))
+            // A page that tells its size and never comes for the stream does not hold it.
+            assertEquals(200, post(port, "/t/view", "800 600 2"))
+            assertEquals(Viewport(800, 600, 2f).toString(), views.poll(3, TimeUnit.SECONDS))
+            assertEquals("gone", views.poll(3, TimeUnit.SECONDS))
+            assertNull(views.poll(500, TimeUnit.MILLISECONDS))
+        } finally {
+            server.stop()
         }
     }
 

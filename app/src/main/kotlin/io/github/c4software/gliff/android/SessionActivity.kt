@@ -7,21 +7,29 @@ import android.content.res.Configuration
 import android.net.Uri
 import android.content.ClipboardManager
 import android.os.Bundle
+import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import io.github.c4software.gliff.client.SessionController
 import io.github.c4software.gliff.ui.GliffTheme
 import io.github.c4software.gliff.ui.SessionScreen
+import kotlinx.coroutines.delay
 
 /**
  * One machine's remote screen, in a task of its own so several machines can
@@ -36,6 +44,14 @@ class SessionActivity : ComponentActivity() {
     /** The window's position is ours to choose: a phone's whole screen, not a window among others. */
     private var turns by mutableStateOf(false)
     private var landscape = false
+
+    /**
+     * The screen is blacked out, a browser showing the session in its place.
+     * `touches` counts the fingers put down, each one lighting it for a while.
+     */
+    private var dark by mutableStateOf(false)
+    private var touches by mutableIntStateOf(0)
+    private var waking = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +74,25 @@ class SessionActivity : ComponentActivity() {
                 val flag = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
                 if (settings.keepAwake) window.addFlags(flag) else window.clearFlags(flag)
             }
+            val watched by graph.mirrorWatched.collectAsState()
+            val darkens = settings.httpMirror && settings.mirrorDark && watched
+            LaunchedEffect(darkens, touches) {
+                dark = false
+                if (darkens) {
+                    delay(DARK_AFTER_MS)
+                    dark = true
+                }
+            }
+            LaunchedEffect(dark) {
+                // As dim as the panel goes; on an OLED a black picture then lights nothing.
+                window.attributes = window.attributes.apply {
+                    screenBrightness = if (dark) {
+                        WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_OFF
+                    } else {
+                        WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+                    }
+                }
+            }
             GliffTheme {
                 SessionScreen(
                     controller,
@@ -69,8 +104,18 @@ class SessionActivity : ComponentActivity() {
                         applyOrientation()
                     },
                 )
+                if (dark) Box(Modifier.fillMaxSize().background(Color.Black))
             }
         }
+    }
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+            // The touch that lights the screen was not aimed at anything on it.
+            waking = dark
+            touches++
+        }
+        return if (waking) true else super.dispatchTouchEvent(event)
     }
 
     override fun onResume() {
@@ -160,6 +205,9 @@ class SessionActivity : ComponentActivity() {
     companion object {
         /** From this width up Android itself stops honouring orientation requests. */
         private const val LARGE_SCREEN_DP = 600
+
+        /** How long the screen stays lit after a touch while a browser watches. */
+        private const val DARK_AFTER_MS = 5000L
 
         /** One task per machine: opening a machine again brings its window back. */
         fun intent(context: Context, machineId: String): Intent =

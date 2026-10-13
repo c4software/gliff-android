@@ -49,6 +49,8 @@ interface Strings {
     val scaleTitle: String
     val scaleExplain: String
     val scaleAuto: String
+    val resolutionTitle: String
+    val resolutionExplain: String
     val keyboardZoom: String
     val keyboardZoomExplain: String
     val directTouch: String
@@ -58,6 +60,8 @@ interface Strings {
     val httpMirrorNoNetwork: String
     val mirrorControl: String
     val mirrorControlExplain: String
+    val mirrorDark: String
+    val mirrorDarkExplain: String
     val keepAwake: String
     val clipboard: String
     val clipboardExplain: String
@@ -114,14 +118,18 @@ object English : Strings {
     override val scaleTitle = "Display scale"
     override val scaleExplain = "How large the remote draws on a private screen. Smaller shows more."
     override val scaleAuto = "Auto"
+    override val resolutionTitle = "Resolution"
+    override val resolutionExplain =
+        "Auto follows the window. A fixed resolution larger than the screen shows more, fitted in it; " +
+            "the scale then starts from 100 %."
     override val keyboardZoom = "Show as much with the keyboard"
     override val keyboardZoomExplain = "Draws the remote smaller while the keyboard is up, instead of cutting the screen."
     override val directTouch = "Tap where you click"
     override val directTouchExplain = "Off: the screen works as a trackpad. A button in the session switches at any time."
     override val httpMirror = "Web mirror"
     override val httpMirrorExplain =
-        "Shows the open session in a web browser on the same network. " +
-            "Anyone who has this address sees your screen: keep it to yourself."
+        "Shows the open session in a web browser on the same network, sized for the browser's window: " +
+            "zoom the page out to see more. Anyone who has this address sees your screen: keep it to yourself."
     override val httpMirrorNoNetwork = "No network address yet."
     override val clipboard = "Shared clipboard"
     override val clipboardExplain = "Text copied here can be pasted on the remote, and text copied there lands on this device's clipboard."
@@ -129,6 +137,8 @@ object English : Strings {
     override val keepAwakeExplain = "The device does not go to sleep while a session is on screen."
     override val mirrorControl = "Control from the browser"
     override val mirrorControlExplain = "The page's mouse and keyboard drive the session. The address then gives control, not just a view."
+    override val mirrorDark = "Dark screen while mirrored"
+    override val mirrorDarkExplain = "This device's screen goes black while a browser watches. A touch brings it back for a moment."
 }
 
 object French : Strings {
@@ -181,14 +191,18 @@ object French : Strings {
     override val scaleTitle = "Échelle d'affichage"
     override val scaleExplain = "Taille du bureau distant en écran privé. Plus petit en montre plus."
     override val scaleAuto = "Auto"
+    override val resolutionTitle = "Résolution"
+    override val resolutionExplain =
+        "Auto suit la fenêtre. Une résolution fixe plus grande que l'écran en montre plus, ajustée dedans ; " +
+            "l'échelle part alors de 100 %."
     override val keyboardZoom = "En montrer autant avec le clavier"
     override val keyboardZoomExplain = "Dessine le bureau plus petit quand le clavier est ouvert, au lieu de couper l'écran."
     override val directTouch = "Cliquer là où l'on touche"
     override val directTouchExplain = "Désactivé : l'écran sert de pavé tactile. Un bouton de la session permet de changer à tout moment."
     override val httpMirror = "Miroir web"
     override val httpMirrorExplain =
-        "Affiche la session ouverte dans un navigateur du même réseau. " +
-            "Quiconque a cette adresse voit votre écran : gardez-la pour vous."
+        "Affiche la session ouverte dans un navigateur du même réseau, à la taille de sa fenêtre : " +
+            "dézoomez la page pour en voir plus. Quiconque a cette adresse voit votre écran : gardez-la pour vous."
     override val httpMirrorNoNetwork = "Pas encore d'adresse réseau."
     override val clipboard = "Presse-papiers partagé"
     override val clipboardExplain = "Le texte copié ici se colle sur la machine distante, et le texte copié là-bas arrive dans le presse-papiers de cet appareil."
@@ -196,6 +210,8 @@ object French : Strings {
     override val keepAwakeExplain = "L'appareil ne se met pas en veille tant qu'une session est à l'écran."
     override val mirrorControl = "Contrôle depuis le navigateur"
     override val mirrorControlExplain = "La souris et le clavier de la page pilotent la session. L'adresse donne alors le contrôle, plus seulement la vue."
+    override val mirrorDark = "Écran noir pendant le miroir"
+    override val mirrorDarkExplain = "L'écran de cet appareil passe au noir tant qu'un navigateur regarde. Un appui le rallume un moment."
 }
 
 @Composable

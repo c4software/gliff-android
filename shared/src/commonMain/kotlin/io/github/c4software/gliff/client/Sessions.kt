@@ -1,7 +1,10 @@
 package io.github.c4software.gliff.client
 
+import io.github.c4software.gliff.mirror.Viewport
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 
@@ -16,8 +19,8 @@ interface MirrorSink : FrameSink {
  * so a window being resized, rotated or recreated never cuts a connection.
  * `scope` is the application's.
  *
- * [session], [endSession] and [front] are for the main thread; [frontSession]
- * and [mirror] may be used from any.
+ * [session], [endSession], [front] and [viewport] are for the main thread;
+ * [frontSession] and [mirror] may be used from any.
  */
 class Sessions(
     private val machines: MachineRepository,
@@ -51,14 +54,36 @@ class Sessions(
             field = value
         }
 
+    /**
+     * The window of the browser watching the mirror, null while none does.
+     * The session in front is sized for it instead of for its own window.
+     */
+    var viewport: Viewport? = null
+        set(value) {
+            field = value
+            frontSession?.setViewer(value)
+        }
+
+    init {
+        // A resolution imposed in the options holds for every session, open or
+        // to come. Below what it reads: an immediate dispatcher runs it here.
+        scope.launch {
+            settings.settings.map { it.forced }.distinctUntilChanged().collect { mode ->
+                entries.values.forEach { it.controller.setForced(mode) }
+            }
+        }
+    }
+
     /** The session in front, for what comes from outside its window. */
     val frontSession: SessionController? get() = frontId?.let { entries[it] }?.controller
 
     /** `machineId`'s window is the one in front. */
     fun front(machineId: String) {
         if (frontId == machineId) return
+        frontSession?.setViewer(null)
         frontId = machineId
         val entry = entries[machineId]
+        entry?.controller?.setViewer(viewport)
         mirror?.let { mirror ->
             mirror.reset()
             entry?.tap?.let { mirror.configure(it.width, it.height) }
@@ -79,6 +104,8 @@ class Sessions(
             nowMs = nowMs,
         )
         entries = entries + (machineId to Entry(controller, tap))
+        controller.setForced(settings.settings.value.forced)
+        if (frontId == machineId) controller.setViewer(viewport)
         controller.start()
         scope.launch {
             // Closed is its last state.

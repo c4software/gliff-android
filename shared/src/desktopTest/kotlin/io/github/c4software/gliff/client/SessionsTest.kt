@@ -1,5 +1,6 @@
 package io.github.c4software.gliff.client
 
+import io.github.c4software.gliff.mirror.Viewport
 import io.github.c4software.gliff.proto.ChromaMode
 import io.github.c4software.gliff.proto.ClientMsg
 import io.github.c4software.gliff.proto.Codec
@@ -141,6 +142,38 @@ class SessionsTest {
 
         sessions.endSession(b.id)
         assertEquals("reset", next())
+    }
+
+    @Test
+    fun itIsMadeOnADispatcherThatRunsAtOnce() {
+        // Android's main dispatcher starts a coroutine inside the constructor.
+        val immediate = CoroutineScope(Dispatchers.Unconfined)
+        Sessions(machines, settings, connector, immediate, nowMs = { 4242 }, decoder = { FakeDecoder() })
+        immediate.cancel()
+    }
+
+    @Test
+    fun theWebViewerSizesTheSessionInFront() {
+        val first = sessions.session(a.id)
+        val second = sessions.session(b.id)
+        first.setWindowSize(1080, 2200, 2f)
+        second.setWindowSize(1000, 800, 1f)
+        val pa = peer("a").also { it.handshake(config(1920, 1080)) }
+        val pb = peer("b").also { it.handshake(config(1280, 720)) }
+        assertEquals(ClientMsg.Resize(1080, 2200, 2f), pa.expect())
+        assertEquals(ClientMsg.Resize(1000, 800, 1f), pb.expect())
+
+        sessions.viewport = Viewport(2560, 1440, 1f)
+        assertEquals(ClientMsg.Resize(2560, 1440, 1f), pa.expect())
+        // The viewer follows the window in front, and the other goes back to its own.
+        sessions.front(b.id)
+        assertEquals(ClientMsg.Resize(1080, 2200, 2f), pa.expect())
+        assertEquals(
+            setOf(ClientMsg.RequestKeyframe, ClientMsg.Resize(2560, 1440, 1f)),
+            setOf(pb.expect(), pb.expect()),
+        )
+        sessions.viewport = null
+        assertEquals(ClientMsg.Resize(1000, 800, 1f), pb.expect())
     }
 
     @Test

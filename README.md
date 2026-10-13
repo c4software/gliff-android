@@ -35,11 +35,13 @@ What the client does:
   keyboards. Typing uses the remote's own keyboard layout, read over ssh with
   `hyprctl` and `xkbcli`.
 - **Clipboard**: text shared both ways.
-- **Options**: display scale, keyboard zoom, touch mode, shared clipboard,
+- **Options**: display scale (from 50 %), fixed resolution, keyboard zoom, touch mode, shared clipboard,
   keep screen on.
 - **Web mirror** (Android only): an HTTP server on port 8765 that shows the
   session in a browser as fragmented MP4 through Media Source, optionally
-  with mouse and keyboard control. The page sits behind a random token in the
+  with mouse and keyboard control. While a browser watches, the remote is
+  sized for the browser's window and zoom rather than for the device, whose
+  screen can go black meanwhile. The page sits behind a random token in the
   URL. Off by default.
 
 Not done yet:

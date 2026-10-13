@@ -137,6 +137,25 @@ gliff code is authoritative; these notes say where to look.
   from the server when the viewer arrives. Read-only unless the "control from
   the browser" option is on: the page then posts its mouse and keyboard events
   to `/<token>/input` (`BrowserInput`).
+- **Fixed resolution**: the option sends a `Resize` of that size, turned the
+  way of the window, at scale 1 unless a scale is chosen. It is the way under
+  the server's floor of 0.5 for the scale: a picture larger than the screen,
+  fitted in it. It also holds for the web mirror's viewer.
+- **Web mirror, size**: the page posts its window to `/<token>/view`
+  (`WIDTH HEIGHT SCALE`, device pixels and `devicePixelRatio`), and the
+  session in front sends that as its `Resize` instead of the device's window,
+  until no viewer has been there for 3 s. The browser's zoom changes
+  `devicePixelRatio`, hence the remote's scale. The new `StreamConfig` drops
+  the viewers, who reconnect within the grace time.
+- **Web mirror, as an application**: the page has a manifest and a full
+  screen button that calls `navigator.keyboard.lock()`. Chromium only, and
+  only on a secure origin: `http://localhost` through a forwarded port, or
+  the address listed in `chrome://flags/#unsafely-treat-insecure-origin-as-secure`.
+  Serving HTTPS from the device would need a certificate browsers trust.
+- **Web mirror, dark screen**: an application cannot turn the screen off and
+  keep running in front. The option draws black at the lowest brightness
+  instead, which lights nothing on an OLED. Letting the device really sleep
+  needs a foreground service and a wake lock: not done.
 - **Clipboard**: text only. A copy on the device is announced with `Offer`
   and served when the remote pastes, as in the reference. A copy on the
   remote is fetched at once, because an Android clipboard holds text, not a

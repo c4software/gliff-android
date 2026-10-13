@@ -1,6 +1,7 @@
 package io.github.c4software.gliff.client
 
 import io.github.c4software.gliff.proto.ChromaMode
+import io.github.c4software.gliff.mirror.Viewport
 import io.github.c4software.gliff.proto.ClientCaps
 import io.github.c4software.gliff.proto.ClientMsg
 import io.github.c4software.gliff.proto.ClipboardMsg
@@ -96,9 +97,22 @@ class SessionController(
     @Volatile
     private var closed = false
 
-    /** The window as last reported, and what the server was last asked for. */
+    /**
+     * The window as last reported, the web viewer's while there is one, the
+     * resolution the user imposes if any; then what follows from them, and
+     * what the server was last asked for.
+     */
     @Volatile
-    private var window: ClientMsg.Resize? = null
+    private var window: Viewport? = null
+
+    @Volatile
+    private var viewer: Viewport? = null
+
+    @Volatile
+    private var forced: Viewport? = null
+
+    @Volatile
+    private var wanted: ClientMsg.Resize? = null
 
     @Volatile
     private var requested: ClientMsg.Resize? = null
@@ -140,10 +154,45 @@ class SessionController(
     fun setWindowSize(width: Int, height: Int, scale: Float) {
         // The reference client stays silent under 64 px, and so do we.
         if (width < MIN_WINDOW || height < MIN_WINDOW || closed) return
-        val mode = remoteMode(width, height, scale)
-        val size = ClientMsg.Resize(mode.width, mode.height, mode.scale)
-        if (size == window) return
-        window = size
+        // Kept for when the viewer leaves; until then the remote is drawn for it.
+        window = Viewport(width, height, scale)
+        follow()
+    }
+
+    /**
+     * A web browser watches the session through the mirror: the remote is
+     * sized for its window rather than this device's, which then shows the
+     * picture fitted in its own. Null when the viewer is gone.
+     */
+    fun setViewer(view: Viewport?) {
+        if (closed) return
+        viewer = view?.takeIf { it.width >= MIN_WINDOW && it.height >= MIN_WINDOW }
+        follow()
+    }
+
+    /**
+     * The user wants the remote at this resolution and scale whatever shows
+     * it, laid the way of the window: larger than the screen, it shows more,
+     * fitted in it. Null follows the window again.
+     */
+    fun setForced(mode: Viewport?) {
+        if (closed) return
+        forced = mode
+        follow()
+    }
+
+    /** Ask the server for what the window, the viewer and the user now make. */
+    private fun follow() {
+        val view = viewer ?: window ?: return
+        val mode = forced?.let { it.laidLike(view) } ?: view
+        val fitting = remoteMode(mode.width, mode.height, mode.scale)
+        val size = ClientMsg.Resize(fitting.width, fitting.height, fitting.scale)
+        if (size == wanted) return
+        wanted = size
+        resizeLater()
+    }
+
+    private fun resizeLater() {
         resizeJob?.cancel()
         resizeJob = scope.launch {
             // The first size goes at once, so the stream starts at the right one.
@@ -199,7 +248,7 @@ class SessionController(
     }
 
     private fun sendResize() {
-        val size = window ?: return
+        val size = wanted ?: return
         val session = session ?: return
         if (size == requested) return
         requested = size

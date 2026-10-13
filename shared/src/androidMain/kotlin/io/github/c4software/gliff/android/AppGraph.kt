@@ -11,6 +11,7 @@ import io.github.c4software.gliff.client.SessionController
 import io.github.c4software.gliff.client.Sessions
 import io.github.c4software.gliff.client.SettingsRepository
 import io.github.c4software.gliff.mirror.MirrorServer
+import io.github.c4software.gliff.mirror.Viewport
 import io.github.c4software.gliff.transport.Ssh
 import io.github.c4software.gliff.transport.SshKeys
 import io.github.c4software.gliff.transport.SshTarget
@@ -20,6 +21,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -61,6 +64,11 @@ class AppGraph(context: Context) {
     @Volatile
     private var mirror: MirrorServer? = null
 
+    private val watched = MutableStateFlow(false)
+
+    /** Whether a browser is watching the web mirror. */
+    val mirrorWatched: StateFlow<Boolean> get() = watched
+
     init {
         scope.launch {
             settings.settings.map { Triple(it.httpMirror, it.mirrorToken, it.mirrorControl) }.distinctUntilChanged()
@@ -69,6 +77,8 @@ class AppGraph(context: Context) {
                         // Comes back here with the token set.
                         settings.update { it.copy(mirrorToken = MirrorServer.newToken()) }
                     } else {
+                        // The viewers go with the server that had them.
+                        viewed(null)
                         withContext(Dispatchers.IO) { runMirror(if (on) token else null, control) }
                     }
                 }
@@ -85,21 +95,36 @@ class AppGraph(context: Context) {
         } else {
             null
         }
-        val server = MirrorServer(MirrorServer.DEFAULT_PORT, token, onViewer = ::keyframeForViewer, onInput = input) {
+        lateinit var server: MirrorServer
+        server = MirrorServer(
+            MirrorServer.DEFAULT_PORT, token,
+            onViewer = ::keyframeForViewer,
+            onInput = input,
+            // A server stopped meanwhile has nothing more to say.
+            onView = { view -> scope.launch { if (mirror === server) viewed(view) } },
+        ) {
             android.util.Log.i("gliff", it)
         }
+        // Before it listens: a page left open says its window the moment it can.
+        mirror = server
         try {
             server.start()
         } catch (e: java.io.IOException) {
             android.util.Log.w("gliff", "cannot start the web mirror", e)
+            mirror = null
             return
         }
-        mirror = server
         sessions.mirror = object : MirrorSink {
             override fun configure(width: Int, height: Int) = server.configure(width, height)
             override fun frame(data: ByteArray, keyframe: Boolean) = server.frame(data, keyframe)
             override fun reset() = server.reset()
         }
+    }
+
+    /** A browser watches with a window of this size, or none does any more. Main thread. */
+    private fun viewed(view: Viewport?) {
+        sessions.viewport = view
+        watched.value = view != null
     }
 
     /** A viewer starts on a keyframe; asked twice, as requests too close together are merged. */

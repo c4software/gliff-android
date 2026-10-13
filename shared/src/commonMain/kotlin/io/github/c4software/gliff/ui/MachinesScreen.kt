@@ -357,6 +357,28 @@ fun SettingsDialog(
                         }
                     }
                 }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text(strings.resolutionTitle, style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        strings.resolutionExplain,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(
+                            settings.forced == null,
+                            onClick = { onChange(settings.copy(forcedWidth = 0, forcedHeight = 0)) },
+                            label = { Text(strings.scaleAuto) },
+                        )
+                        for ((width, height) in Settings.RESOLUTIONS) {
+                            FilterChip(
+                                settings.forcedWidth == width && settings.forcedHeight == height,
+                                onClick = { onChange(settings.copy(forcedWidth = width, forcedHeight = height)) },
+                                label = { Text("$width × $height") },
+                            )
+                        }
+                    }
+                }
                 Toggle(strings.keyboardZoom, strings.keyboardZoomExplain, settings.keyboardZoom) {
                     onChange(settings.copy(keyboardZoom = it))
                 }
@@ -377,6 +399,9 @@ fun SettingsDialog(
                 if (mirrorUrls != null && settings.httpMirror) {
                     Toggle(strings.mirrorControl, strings.mirrorControlExplain, settings.mirrorControl) {
                         onChange(settings.copy(mirrorControl = it))
+                    }
+                    Toggle(strings.mirrorDark, strings.mirrorDarkExplain, settings.mirrorDark) {
+                        onChange(settings.copy(mirrorDark = it))
                     }
                     SelectionContainer {
                         Text(

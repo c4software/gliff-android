@@ -76,6 +76,7 @@ class GeometryTest {
         for ((w, h, scale) in listOf(
             Triple(1080, 2238, 2.625f), Triple(1080, 1046, 1.227f), Triple(1080, 2174, 2.625f),
             Triple(2410, 1000, 2.625f), Triple(1400, 900, 1f), Triple(1919, 1079, 1.5f), Triple(700, 500, 3.5f),
+            Triple(1080, 2238, 0.5f), Triple(1080, 2238, 0.75f),
         )) {
             val mode = remoteMode(w, h, scale)
             assertTakenAsAsked(mode)

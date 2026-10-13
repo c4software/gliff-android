@@ -21,6 +21,16 @@ import kotlin.concurrent.thread
  * given: the page then posts its mouse and keyboard events to
  * `/<token>/input`, and they are handed over as they came.
  *
+ * The page also posts the size of its window to `/<token>/view`, so that the
+ * remote can be drawn for the browser rather than for this device. `onView`
+ * gets it, then null once no viewer has been there for `viewGraceMs`: a page
+ * that reconnects is not one that left.
+ *
+ * The page comes with a manifest, so a browser can install it as an
+ * application, and a full screen button that also asks for every key (Escape,
+ * Super, the window manager's shortcuts). Browsers grant both to secure
+ * origins only, which plain HTTP is when reached as `localhost`.
+ *
  * A viewer starts on a keyframe, so `onViewer` asks the session for one. When
  * the stream's parameters change the viewers are dropped, and the page
  * connects again for a fresh start.
@@ -32,6 +42,9 @@ class MirrorServer(
     private val onViewer: () -> Unit,
     /** The page's input events, one per line; null keeps the page to watching. Called from a server thread. */
     private val onInput: ((String) -> Unit)? = null,
+    /** The window of the page being watched, null when nobody watches any more. Called from a server thread. */
+    private val onView: (Viewport?) -> Unit = {},
+    private val viewGraceMs: Long = VIEW_GRACE_MS,
     private val log: (String) -> Unit = {},
 ) {
     private val lock = Any()
@@ -45,6 +58,10 @@ class MirrorServer(
     private var sets: Fmp4.ParameterSets? = null
     private var init: ByteArray? = null
     private var sequence = 0
+
+    /** The window last posted, and a count that tells the latest wait for viewers from the older ones. */
+    private var view: Viewport? = null
+    private var waits = 0
 
     val viewerCount: Int get() = viewers.size
 
@@ -71,6 +88,10 @@ class MirrorServer(
     fun stop() {
         socket?.let { runCatching { it.close() } }
         socket = null
+        synchronized(lock) {
+            view = null
+            waits++
+        }
         reset()
     }
 
@@ -132,8 +153,12 @@ class MirrorServer(
             if (request.method == "POST") {
                 val input = onInput
                 when {
-                    !sameText(path.take(mine.length), mine) || path != "$mine/input" ->
-                        respond(out, "404 Not Found", "text/plain", "Not found")
+                    !sameText(path.take(mine.length), mine) -> respond(out, "404 Not Found", "text/plain", "Not found")
+                    path == "$mine/view" -> {
+                        viewed(request.body)
+                        respond(out, "200 OK", "text/plain", "")
+                    }
+                    path != "$mine/input" -> respond(out, "404 Not Found", "text/plain", "Not found")
                     input == null -> respond(out, "403 Forbidden", "text/plain", "Control is off")
                     else -> {
                         input(request.body)
@@ -154,6 +179,8 @@ class MirrorServer(
                     out, "200 OK", "text/html; charset=utf-8",
                     PAGE.replace("CONTROL = false", "CONTROL = ${onInput != null}"),
                 )
+                path == "$mine/manifest.json" -> respond(out, "200 OK", "application/manifest+json", MANIFEST)
+                path == "$mine/icon.svg" -> respond(out, "200 OK", "image/svg+xml", ICON)
                 path == "$mine/stream" -> {
                     if (viewers.size >= MAX_VIEWERS) {
                         respond(out, "503 Service Unavailable", "text/plain", "Too many viewers")
@@ -182,8 +209,40 @@ class MirrorServer(
         viewers.add(viewer)
         log("mirror viewer from ${client.inetAddress.hostAddress}")
         onViewer()
+        // A still screen writes nothing, so a viewer leaving is seen on the reading side.
+        thread(name = "gliff-mirror-hangup", isDaemon = true) {
+            runCatching { while (client.getInputStream().read() >= 0) Unit }
+            viewer.close()
+        }
         viewer.run()
         viewers.remove(viewer)
+        forgetLater()
+    }
+
+    /** The page says how large its window is: `WIDTH HEIGHT SCALE`. Anything else is skipped. */
+    private fun viewed(body: String) {
+        val parts = body.trim().split(' ')
+        if (parts.size != 3) return
+        val width = parts[0].toIntOrNull()?.takeIf { it in 1..MAX_SIDE } ?: return
+        val height = parts[1].toIntOrNull()?.takeIf { it in 1..MAX_SIDE } ?: return
+        val scale = parts[2].toFloatOrNull()?.takeIf { it.isFinite() && it > 0f } ?: return
+        val view = Viewport(width, height, scale)
+        synchronized(lock) { this.view = view }
+        onView(view)
+        // A page that never comes for the stream is not a viewer for long.
+        forgetLater()
+    }
+
+    /** Drop the page's window if no viewer shows up within the grace time. */
+    private fun forgetLater() {
+        val wait = synchronized(lock) { ++waits }
+        thread(name = "gliff-mirror-view", isDaemon = true) {
+            Thread.sleep(viewGraceMs)
+            val gone = synchronized(lock) {
+                (wait == waits && viewers.isEmpty() && view != null).also { if (it) view = null }
+            }
+            if (gone) onView(null)
+        }
     }
 
     private class Request(val method: String, val path: String, val body: String)
@@ -266,6 +325,10 @@ class MirrorServer(
         private const val QUEUE_FRAMES = 240
         private const val REQUEST_TIMEOUT_MS = 5000
         private const val MAX_REQUEST = 8192
+        private const val MAX_SIDE = 16384
+
+        /** How long the remote stays sized for a page whose stream is cut: it comes back within a second. */
+        const val VIEW_GRACE_MS = 3000L
 
         /** A token short enough to type and long enough not to be guessed over a network. */
         fun newToken(): String {
@@ -284,6 +347,23 @@ class MirrorServer(
                 .toList()
         }.getOrDefault(emptyList())
 
+        /** What a browser needs to install the page as an application, opened where the manifest is. */
+        private val MANIFEST = """
+{"name":"Gliff","short_name":"Gliff","start_url":"./","scope":"./","display":"standalone",
+"background_color":"#000000","theme_color":"#000000",
+"icons":[{"src":"icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any"}]}
+""".trimIndent()
+
+        /** The application's launcher icon, redrawn for the web. */
+        private val ICON = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="14 14 80 80">
+<rect x="14" y="14" width="80" height="80" rx="16" fill="#101319"/>
+<rect x="36" y="30" width="48" height="34" rx="4" fill="#1E3F7A"/>
+<rect x="24" y="42" width="48" height="34" rx="4" fill="#8FB4FF"/>
+<rect x="29" y="47" width="38" height="24" fill="#101319"/>
+</svg>
+""".trimIndent()
+
         private val PAGE = """
 <!doctype html>
 <html>
@@ -291,15 +371,23 @@ class MirrorServer(
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>gliff</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<meta name="theme-color" content="#000000">
 <style>
 html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
 video { width: 100%; height: 100%; object-fit: contain; display: block; }
+#full { position: fixed; top: 12px; right: 12px; width: 36px; height: 36px; padding: 0; border: 0; border-radius: 8px; background: #223; color: #cde; font: 20px system-ui, sans-serif; opacity: .3; cursor: pointer; }
+#full:hover { opacity: 1; }
+#hint { position: fixed; left: 0; right: 0; top: 16px; text-align: center; color: #fc8; font: 14px system-ui, sans-serif; }
 #note { position: fixed; left: 0; right: 0; bottom: 16px; text-align: center; color: #9aa; font: 14px system-ui, sans-serif; }
 </style>
 </head>
 <body>
 <video id="video" muted autoplay playsinline></video>
 <div id="note">Waiting for the session…</div>
+<button id="full" title="Full screen" hidden>⛶</button>
+<div id="hint" hidden></div>
 <script>
 const video = document.getElementById('video');
 const note = document.getElementById('note');
@@ -349,6 +437,44 @@ async function play() {
   try { await reader.cancel(); } catch (e) {}
 }
 
+// The remote is drawn for this window: its size in device pixels, and the scale
+// that makes them. Zooming the page changes that scale, and so how much shows.
+let told = '';
+function tellSize(again) {
+  const ratio = window.devicePixelRatio || 1;
+  const size = Math.round(innerWidth * ratio) + ' ' + Math.round(innerHeight * ratio) + ' ' + ratio.toFixed(3);
+  if (size === told && !again) return;
+  told = size;
+  return fetch('view', { method: 'POST', body: size }).catch(() => {});
+}
+let resized = 0;
+window.addEventListener('resize', () => { clearTimeout(resized); resized = setTimeout(tellSize, 300); });
+
+// Full screen, where the browser can then hand over the keys it keeps for
+// itself and for the system. It only does so on a secure origin.
+const full = document.getElementById('full');
+full.hidden = !document.fullscreenEnabled;
+full.addEventListener('click', () => { document.documentElement.requestFullscreen().catch(() => {}); });
+document.addEventListener('fullscreenchange', () => {
+  const on = !!document.fullscreenElement;
+  full.hidden = on;
+  const lock = navigator.keyboard && navigator.keyboard.lock;
+  if (on && lock) navigator.keyboard.lock().catch(() => say('The browser refused to hand over the system keys.'));
+  else if (lock) navigator.keyboard.unlock();
+  // Said rather than left to be found out: Super and the like then act on this machine too.
+  else if (on) say(window.isSecureContext
+    ? 'This browser keeps the system keys (Super, Alt+Tab…) for this machine. Chrome hands them over.'
+    : 'System keys (Super, Alt+Tab…) stay with this machine: the page must be opened as http://localhost, in Chrome.');
+});
+const hint = document.getElementById('hint');
+let hinted = 0;
+function say(text) {
+  hint.textContent = text;
+  hint.hidden = false;
+  clearTimeout(hinted);
+  hinted = setTimeout(() => { hint.hidden = true; }, 8000);
+}
+
 const CONTROL = false;
 if (CONTROL) {
   const queue = [];
@@ -381,8 +507,8 @@ if (CONTROL) {
   }
   function move(e) { const m = place(e); if (m) push(m); return m; }
   window.addEventListener('mousemove', move);
-  window.addEventListener('mousedown', e => { if (move(e)) push('b ' + e.button + ' 1'); e.preventDefault(); });
-  window.addEventListener('mouseup', e => { if (move(e)) push('b ' + e.button + ' 0'); e.preventDefault(); });
+  window.addEventListener('mousedown', e => { if (e.target === full) return; if (move(e)) push('b ' + e.button + ' 1'); e.preventDefault(); });
+  window.addEventListener('mouseup', e => { if (e.target === full) return; if (move(e)) push('b ' + e.button + ' 0'); e.preventDefault(); });
   window.addEventListener('contextmenu', e => e.preventDefault());
   window.addEventListener('wheel', e => {
     // Lines or pixels, as the device reports them; a notch is about 100 pixels or 3 lines.
@@ -407,6 +533,8 @@ if (CONTROL) {
 (async () => {
   if (!window.MediaSource) { note.textContent = 'This browser cannot play the stream (no Media Source).'; return; }
   for (;;) {
+    // Said again each time: it is forgotten when the stream stays away.
+    await tellSize(true);
     try { await play(); } catch (e) {}
     await sleep(500);
   }

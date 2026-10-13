@@ -1,5 +1,6 @@
 package io.github.c4software.gliff.client
 
+import io.github.c4software.gliff.mirror.Viewport
 import io.github.c4software.gliff.proto.ByteSink
 import io.github.c4software.gliff.proto.ByteSource
 import io.github.c4software.gliff.proto.ChromaMode
@@ -148,6 +149,48 @@ class SessionControllerTest {
         Thread.sleep(SessionController.RESIZE_DEBOUNCE_MS * 2)
         controller.requestKeyframe()
         assertEquals(ClientMsg.RequestKeyframe, p.expect())
+    }
+
+    @Test
+    fun theRemoteIsSizedForTheWebViewerWhileThereIsOne() {
+        trusted()
+        controller.setWindowSize(1080, 2200, 2.5f)
+        controller.start()
+        val p = peer()
+        p.handshake(config())
+        assertEquals(ClientMsg.Resize(1080, 2200, 2.5f), p.expect())
+        controller.setViewer(Viewport(2560, 1440, 1f))
+        assertEquals(ClientMsg.Resize(2560, 1440, 1f), p.expect())
+        // This device's window is remembered, not asked for: the keyboard came up.
+        controller.setWindowSize(1080, 1200, 2.5f)
+        controller.setViewer(Viewport(2560, 1440, 1f))
+        // The page was zoomed out: the same pixels at a smaller scale.
+        controller.setViewer(Viewport(2560, 1440, 0.5f))
+        assertEquals(ClientMsg.Resize(2560, 1440, 0.5f), p.expect())
+        controller.setViewer(null)
+        assertEquals(ClientMsg.Resize(1080, 1200, 2.5f), p.expect())
+    }
+
+    @Test
+    fun anImposedResolutionHoldsWhateverShowsIt() {
+        trusted()
+        controller.setWindowSize(1080, 2200, 2.5f)
+        controller.setForced(Viewport(2560, 1440, 1f))
+        controller.start()
+        val p = peer()
+        p.handshake(config())
+        // Upright, as the window is.
+        assertEquals(ClientMsg.Resize(1440, 2560, 1f), p.expect())
+        controller.setWindowSize(2200, 1080, 2.5f)
+        assertEquals(ClientMsg.Resize(2560, 1440, 1f), p.expect())
+        // A browser of another size changes nothing, unless it stands the other way.
+        controller.setViewer(Viewport(1920, 1080, 2f))
+        controller.setViewer(Viewport(800, 1200, 2f))
+        assertEquals(ClientMsg.Resize(1440, 2560, 1f), p.expect())
+        controller.setViewer(null)
+        assertEquals(ClientMsg.Resize(2560, 1440, 1f), p.expect())
+        controller.setForced(null)
+        assertEquals(ClientMsg.Resize(2200, 1080, 2.5f), p.expect())
     }
 
     @Test

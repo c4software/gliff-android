@@ -136,7 +136,12 @@ fun SessionScreen(
         state = state,
         address = controller.machine?.address.orEmpty(),
         strings = strings,
-        onSize = { w, h, zoom -> controller.setWindowSize(w, h, if (settings.keyboardZoom) density * zoom else density) },
+        onSize = { w, h, zoom ->
+            // An imposed resolution stays as it is under the keyboard, and laid as the whole window was.
+            if (settings.forced == null || zoom >= 1f) {
+                controller.setWindowSize(w, h, if (settings.keyboardZoom) density * zoom else density)
+            }
+        },
         onAcceptHostKey = controller::acceptHostKey,
         onRetry = controller::start,
         onBack = onBack,

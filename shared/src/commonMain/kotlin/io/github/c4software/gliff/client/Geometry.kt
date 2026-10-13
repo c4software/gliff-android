@@ -1,5 +1,6 @@
 package io.github.c4software.gliff.client
 
+import io.github.c4software.gliff.mirror.Viewport
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -68,6 +69,13 @@ fun remoteMode(width: Int, height: Int, scale: Float): RemoteMode {
         }
     }
     return best
+}
+
+/** This resolution turned the way of `view`: upright for an upright window. */
+fun Viewport.laidLike(view: Viewport): Viewport {
+    val long = maxOf(width, height)
+    val short = minOf(width, height)
+    return if (view.height > view.width) copy(width = short, height = long) else copy(width = long, height = short)
 }
 
 private const val SCALE_STEPS = 120

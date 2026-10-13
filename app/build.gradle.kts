@@ -75,6 +75,11 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.findByName("release")
+            // R8 shrinks and renames: the Play Store asks for obfuscated dex.
+            // The mapping that reads a stack trace back goes up with the bundle.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 

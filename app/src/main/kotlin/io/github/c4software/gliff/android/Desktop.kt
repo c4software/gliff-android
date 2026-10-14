@@ -22,7 +22,9 @@ internal val Activity.inDesktopWindow: Boolean
  */
 internal fun Activity.blendHeaderBar() {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
-    window.insetsController?.setSystemBarsAppearance(
+    // Through the decor view, which this creates: before it, in onCreate,
+    // the window's own insetsController throws.
+    window.decorView.windowInsetsController?.setSystemBarsAppearance(
         WindowInsetsController.APPEARANCE_TRANSPARENT_CAPTION_BAR_BACKGROUND,
         WindowInsetsController.APPEARANCE_TRANSPARENT_CAPTION_BAR_BACKGROUND or
             WindowInsetsController.APPEARANCE_LIGHT_CAPTION_BARS,

@@ -20,6 +20,9 @@ set -eu
 
 KEYS="force_desktop_mode_on_external_displays force_allow_on_external overlay_display_devices"
 
+# adb reads its standard input, and would swallow what `off` reads the saved settings from.
+adb() { command adb "$@" < /dev/null; }
+
 serial=$(adb get-serialno | tr -d '\r')
 state="${XDG_STATE_HOME:-$HOME/.local/state}/gliff/desktop-mode-$(printf %s "$serial" | tr -c 'A-Za-z0-9.-' _).env"
 

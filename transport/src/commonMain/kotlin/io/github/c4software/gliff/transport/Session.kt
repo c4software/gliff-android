@@ -14,6 +14,7 @@ import io.github.c4software.gliff.proto.isIncompatible
 import kotlin.concurrent.Volatile
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
@@ -101,7 +102,10 @@ class Session(
         try {
             coroutineScope {
                 // A blocked read or write only ends when the stream closes.
-                launch {
+                // Started here and now: a coroutine cancelled before it
+                // runs never reaches its finally, and the reader would wait
+                // for ever.
+                launch(start = CoroutineStart.UNDISPATCHED) {
                     try {
                         awaitCancellation()
                     } finally {

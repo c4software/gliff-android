@@ -1,2 +1,4 @@
-• In a desktop window, a button puts the session full screen, without the bars, and back.
-• Drawing behind the system bars no longer relies on APIs that Android 15 deprecates.
+• On a desktop, the window's header blends into the app and shows the machine's name; a session opens in a landscape window.
+• With a mouse and a keyboard plugged in, the floating buttons step aside from the remote screen.
+• The system can open the list of machines in another window.
+• A session left at the wrong moment no longer keeps its connection open.

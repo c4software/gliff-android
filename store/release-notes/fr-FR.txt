@@ -1,2 +1,4 @@
-• Dans une fenêtre de bureau, un bouton passe la session en plein écran, sans les barres, et l'en fait sortir.
-• L'affichage sous les barres système ne passe plus par des API qu'Android 15 rend obsolètes.
+• Sur un bureau, l'en-tête de la fenêtre se fond dans l'app et porte le nom de la machine ; une session s'ouvre dans une fenêtre en paysage.
+• Avec une souris et un clavier branchés, les boutons flottants libèrent l'écran distant.
+• Le système peut ouvrir la liste des machines dans une autre fenêtre.
+• Une session quittée au mauvais moment ne garde plus sa connexion ouverte.

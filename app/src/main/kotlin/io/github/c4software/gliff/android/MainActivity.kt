@@ -12,9 +12,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        blendHeaderBar()
         setContent {
             GliffTheme {
-                MachinesRoute(onOpen = { startActivity(SessionActivity.intent(this, it.id)) })
+                MachinesRoute(onOpen = { startActivity(SessionActivity.intent(this, it.id), sessionLaunchOptions()) })
             }
         }
     }

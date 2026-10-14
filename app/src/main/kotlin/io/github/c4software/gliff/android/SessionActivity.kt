@@ -5,10 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
+import android.hardware.input.InputManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.OutcomeReceiver
 import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
@@ -16,18 +15,28 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.isCaptionBarVisible
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.windowInsetsTopHeight
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -70,12 +79,18 @@ class SessionActivity : ComponentActivity(), KoinComponent {
     private var touches by mutableIntStateOf(0)
     private var waking = false
 
-    /** The desktop window was made to fill the display, by its button; the button can give it back. */
-    private var fullScreen by mutableStateOf(false)
+    /** No mouse and keyboard together: the screen keeps its floating buttons. */
+    private var touchControls by mutableStateOf(true)
+    private val inputDevices = object : InputManager.InputDeviceListener {
+        override fun onInputDeviceAdded(deviceId: Int) = updateTouchControls()
+        override fun onInputDeviceRemoved(deviceId: Int) = updateTouchControls()
+        override fun onInputDeviceChanged(deviceId: Int) = updateTouchControls()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        blendHeaderBar()
         val id = intent.data?.lastPathSegment
         if (id == null) {
             finish()
@@ -110,8 +125,6 @@ class SessionActivity : ComponentActivity(), KoinComponent {
                     }
                 }
             }
-            // A desktop window has a caption bar; a split or full screen one has none.
-            val desktop = WindowInsets.captionBar.getTop(LocalDensity.current) > 0
             GliffTheme {
                 SessionRoute(
                     viewModel,
@@ -121,14 +134,9 @@ class SessionActivity : ComponentActivity(), KoinComponent {
                         landscape = it
                         applyOrientation()
                     },
-                    fullScreen = when {
-                        Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM -> null
-                        fullScreen -> true
-                        desktop -> false
-                        else -> null
-                    },
-                    onFullScreen = ::toggleFullScreen,
+                    touchControls = touchControls,
                 )
+                HeaderTitle(ui.address)
                 if (dark) Box(Modifier.fillMaxSize().background(Color.Black))
             }
         }
@@ -151,8 +159,6 @@ class SessionActivity : ComponentActivity(), KoinComponent {
 
     override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration) {
         super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig)
-        // Back in a window, however it got there.
-        if (isInMultiWindowMode) fullScreen = false
         applyImmersion()
         applyOrientation()
     }
@@ -183,11 +189,24 @@ class SessionActivity : ComponentActivity(), KoinComponent {
     override fun onStart() {
         super.onStart()
         clipboard.onChange(clipboardChanged)
+        getSystemService(InputManager::class.java)?.registerInputDeviceListener(inputDevices, null)
+        updateTouchControls()
     }
 
     override fun onStop() {
         clipboard.removeOnChange(clipboardChanged)
+        getSystemService(InputManager::class.java)?.unregisterInputDeviceListener(inputDevices)
         super.onStop()
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // A keyboard plugged in or out is a configuration change, kept by configChanges.
+        updateTouchControls()
+    }
+
+    private fun updateTouchControls() {
+        touchControls = !hasMouseAndKeyboard()
     }
 
     /**
@@ -204,26 +223,6 @@ class SessionActivity : ComponentActivity(), KoinComponent {
             landscape -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
-    }
-
-    /**
-     * A desktop window fills the display, its bars hidden as on a phone, or
-     * goes back to where it was. Only a window that the button made full
-     * screen can be given back, hence [fullScreen].
-     */
-    private fun toggleFullScreen() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
-        val entering = !fullScreen
-        requestFullscreenMode(
-            if (entering) FULLSCREEN_MODE_REQUEST_ENTER else FULLSCREEN_MODE_REQUEST_EXIT,
-            object : OutcomeReceiver<Void, Throwable> {
-                override fun onResult(result: Void?) {
-                    fullScreen = entering
-                }
-
-                override fun onError(error: Throwable) {}
-            },
-        )
     }
 
     /**
@@ -252,5 +251,23 @@ class SessionActivity : ComponentActivity(), KoinComponent {
             Intent(context, SessionActivity::class.java)
                 .setData(Uri.Builder().scheme("gliff").authority("session").appendPath(machineId).build())
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT)
+    }
+}
+
+/** The machine's name in the header bar of a desktop window, which shows through over the app's black. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HeaderTitle(title: String) {
+    if (!WindowInsets.isCaptionBarVisible || title.isEmpty()) return
+    Box(Modifier.fillMaxWidth().windowInsetsTopHeight(WindowInsets.captionBar), contentAlignment = Alignment.Center) {
+        Text(
+            title,
+            // Clear of the app's chip on the left and the window's buttons on the right.
+            Modifier.padding(horizontal = 160.dp),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }

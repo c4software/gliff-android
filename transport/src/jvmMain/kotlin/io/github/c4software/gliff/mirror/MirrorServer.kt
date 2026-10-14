@@ -1,5 +1,6 @@
 package io.github.c4software.gliff.mirror
 
+import io.github.c4software.gliff.domain.session.Viewport
 import java.io.IOException
 import java.io.OutputStream
 import java.net.InetAddress

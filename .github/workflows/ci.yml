@@ -47,6 +47,9 @@ jobs:
       - name: Protocol tests
         run: ./gradlew :proto:jvmTest
 
+      - name: Domain tests
+        run: ./gradlew :domain:jvmTest
+
       - name: Transport tests
         run: ./gradlew :transport:jvmTest
 

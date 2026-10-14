@@ -1,17 +1,18 @@
 package io.github.c4software.gliff.android
 
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.net.Uri
-import android.content.ClipboardManager
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,10 +27,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
-import io.github.c4software.gliff.client.SessionController
-import io.github.c4software.gliff.ui.GliffTheme
-import io.github.c4software.gliff.ui.SessionScreen
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import io.github.c4software.gliff.data.clipboard.AndroidClipboard
+import io.github.c4software.gliff.presentation.session.SessionRoute
+import io.github.c4software.gliff.presentation.session.SessionViewModel
+import io.github.c4software.gliff.presentation.theme.GliffTheme
 import kotlinx.coroutines.delay
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
+import org.koin.core.component.inject
+import org.koin.core.parameter.parametersOf
 
 /**
  * One machine's remote screen, in a task of its own so several machines can
@@ -37,9 +45,14 @@ import kotlinx.coroutines.delay
  * across size, rotation and display changes; the session itself belongs to
  * the application, so even a recreated activity finds it running.
  */
-class SessionActivity : ComponentActivity() {
+class SessionActivity : ComponentActivity(), KoinComponent {
     private var machineId: String? = null
-    private var controller: SessionController? = null
+    private val clipboard: AndroidClipboard by inject()
+
+    /** Kept with the activity across its recreations; cleared, ending the session, when it finishes. */
+    private val viewModel: SessionViewModel by viewModels {
+        viewModelFactory { initializer { get<SessionViewModel> { parametersOf(machineId) } } }
+    }
 
     /** The window's position is ours to choose: a phone's whole screen, not a window among others. */
     private var turns by mutableStateOf(false)
@@ -62,20 +75,17 @@ class SessionActivity : ComponentActivity() {
             return
         }
         machineId = id
-        val graph = (application as GliffApplication).graph
-        val controller = graph.session(id)
-        this.controller = controller
-        title = controller.machine?.address ?: title
+        val viewModel = viewModel
+        title = viewModel.uiState.value.address.ifEmpty { null } ?: title
         applyImmersion()
         applyOrientation()
         setContent {
-            val settings by graph.settings.settings.collectAsState()
-            LaunchedEffect(settings.keepAwake) {
+            val ui by viewModel.uiState.collectAsState()
+            LaunchedEffect(ui.keepAwake) {
                 val flag = WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
-                if (settings.keepAwake) window.addFlags(flag) else window.clearFlags(flag)
+                if (ui.keepAwake) window.addFlags(flag) else window.clearFlags(flag)
             }
-            val watched by graph.mirrorWatched.collectAsState()
-            val darkens = settings.httpMirror && settings.mirrorDark && watched
+            val darkens = ui.darkens
             LaunchedEffect(darkens, touches) {
                 dark = false
                 if (darkens) {
@@ -94,11 +104,10 @@ class SessionActivity : ComponentActivity() {
                 }
             }
             GliffTheme {
-                SessionScreen(
-                    controller,
+                SessionRoute(
+                    viewModel,
                     onBack = ::finish,
                     turns = turns,
-                    settings = settings,
                     onLandscape = {
                         landscape = it
                         applyOrientation()
@@ -121,7 +130,7 @@ class SessionActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         // The web mirror shows the session whose window was used last.
-        machineId?.let { (application as GliffApplication).graph.front(it) }
+        if (machineId != null) viewModel.onShown()
     }
 
     override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration) {
@@ -147,21 +156,19 @@ class SessionActivity : ComponentActivity() {
      * focused window may read it, hence here and not in the background.
      */
     private fun offerClipboard() {
-        if (!hasWindowFocus()) return
-        val graph = (application as GliffApplication).graph
-        if (!graph.settings.settings.value.clipboard) return
-        val content = graph.clipboard.read(clipboardSeen) ?: return
+        if (!hasWindowFocus() || machineId == null || !viewModel.sharesClipboard()) return
+        val content = clipboard.read(clipboardSeen) ?: return
         clipboardSeen = content.timestamp
-        controller?.localClipboard(content.text)
+        viewModel.localClipboard(content.text)
     }
 
     override fun onStart() {
         super.onStart()
-        (application as GliffApplication).graph.clipboard.onChange(clipboardChanged)
+        clipboard.onChange(clipboardChanged)
     }
 
     override fun onStop() {
-        (application as GliffApplication).graph.clipboard.removeOnChange(clipboardChanged)
+        clipboard.removeOnChange(clipboardChanged)
         super.onStop()
     }
 
@@ -193,13 +200,6 @@ class SessionActivity : ComponentActivity() {
             controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             controller.hide(WindowInsetsCompat.Type.systemBars())
         }
-    }
-
-    override fun onDestroy() {
-        // Finishing is the user closing the window; anything else is the
-        // system recreating it, and the session must survive that.
-        if (isFinishing) machineId?.let { (application as GliffApplication).graph.endSession(it) }
-        super.onDestroy()
     }
 
     companion object {

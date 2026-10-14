@@ -10,6 +10,7 @@ import java.io.FileOutputStream
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 import kotlin.system.exitProcess
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -156,6 +157,7 @@ fun main(args: Array<String>) {
             chroma = listOf(ChromaMode.Single420),
         ),
         handler,
+        Dispatchers.IO,
         // The remote's own keymap, as the app sends it.
         keymap = transport.keymap,
     )

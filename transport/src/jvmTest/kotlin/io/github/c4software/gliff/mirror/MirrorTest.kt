@@ -1,5 +1,6 @@
 package io.github.c4software.gliff.mirror
 
+import io.github.c4software.gliff.domain.session.Viewport
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.net.HttpURLConnection

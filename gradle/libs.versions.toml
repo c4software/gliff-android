@@ -9,6 +9,10 @@ sshj = "0.40.0"
 slf4j = "2.0.17"
 bouncycastle = "1.80.2"
 play-publisher = "3.12.1"
+# 4.2 needs Kotlin 2.3 and Compose Multiplatform 1.10.
+koin = "4.1.1"
+# The one koin-compose-viewmodel 4.1.1 is built against.
+lifecycle = "2.9.3"
 
 [libraries]
 coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
@@ -18,6 +22,10 @@ coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", ve
 coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 sshj = { module = "com.hierynomus:sshj", version.ref = "sshj" }
 bouncycastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+koin-compose-viewmodel = { module = "io.insert-koin:koin-compose-viewmodel", version.ref = "koin" }
+koin-test = { module = "io.insert-koin:koin-test", version.ref = "koin" }
+lifecycle-viewmodel-compose = { module = "org.jetbrains.androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 slf4j-nop = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
 
 [plugins]

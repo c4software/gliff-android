@@ -17,6 +17,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             api(project(":proto"))
+            api(project(":domain"))
             api(libs.coroutines.core)
         }
         commonTest.dependencies {

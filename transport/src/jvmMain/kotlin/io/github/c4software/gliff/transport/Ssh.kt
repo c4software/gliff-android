@@ -1,5 +1,6 @@
 package io.github.c4software.gliff.transport
 
+import io.github.c4software.gliff.domain.session.HostKeyInfo
 import io.github.c4software.gliff.proto.ByteSink
 import io.github.c4software.gliff.proto.ByteSource
 import java.io.IOException

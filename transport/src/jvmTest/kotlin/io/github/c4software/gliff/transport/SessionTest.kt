@@ -1,11 +1,13 @@
 package io.github.c4software.gliff.transport
 
+import io.github.c4software.gliff.proto.ByteSink
+import io.github.c4software.gliff.proto.ByteSource
+import io.github.c4software.gliff.proto.CborWriter
 import io.github.c4software.gliff.proto.ChromaMode
 import io.github.c4software.gliff.proto.ClientCaps
 import io.github.c4software.gliff.proto.ClientMsg
 import io.github.c4software.gliff.proto.ClipboardMsg
 import io.github.c4software.gliff.proto.Codec
-import io.github.c4software.gliff.proto.CborWriter
 import io.github.c4software.gliff.proto.FrameReader
 import io.github.c4software.gliff.proto.FrameWriter
 import io.github.c4software.gliff.proto.OutputInfo
@@ -13,8 +15,6 @@ import io.github.c4software.gliff.proto.ProtocolException
 import io.github.c4software.gliff.proto.ServerMsg
 import io.github.c4software.gliff.proto.SessionInfo
 import io.github.c4software.gliff.proto.VideoPipeline
-import io.github.c4software.gliff.proto.ByteSink
-import io.github.c4software.gliff.proto.ByteSource
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
@@ -124,7 +124,7 @@ class SessionTest {
             }
         }
         val events = Events()
-        val session = Session(transport, caps, events)
+        val session = Session(transport, caps, events, Dispatchers.IO)
         events.session = session
         val peer = Peer(FrameReader(toServer, ClientMsg::decode), FrameWriter(toClient)) { toClient.close() }
         // Its own scope: a session that fails must not cancel the test with it.

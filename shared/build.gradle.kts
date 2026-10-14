@@ -42,9 +42,13 @@ kotlin {
             implementation(compose.material3)
             implementation(compose.ui)
             implementation(libs.serialization.json)
+            implementation(libs.lifecycle.viewmodel.compose)
+            api(libs.koin.core)
+            implementation(libs.koin.compose.viewmodel)
         }
         commonTest.dependencies {
             implementation(kotlin("test"))
+            implementation(libs.coroutines.test)
         }
         androidMain.dependencies {
             implementation(libs.coroutines.android)
@@ -52,6 +56,7 @@ kotlin {
         val desktopTest by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
+                implementation(libs.koin.test)
             }
         }
     }

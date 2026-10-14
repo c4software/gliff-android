@@ -76,13 +76,16 @@ key fingerprint to confirm.
 | Path | Content |
 |---|---|
 | `proto` | CBOR, messages and framing. Pure Kotlin, no dependency. |
+| `domain` | What the client decides: machines, options, input mapping, geometry, clipboard exchange, and the contracts the other layers implement. Pure Kotlin, on every platform. |
 | `transport` | `Session` (handshake, read and write loops), the ssh command line and key formats. On JVM and Android: ssh (sshj), the web mirror server, the `probe` CLI and a fake server for tests. |
-| `shared` | Compose Multiplatform screens and session logic, with the Android actuals (`MediaCodec`, video surface, storage) and the iOS ones (VideoToolbox, keyboard, clipboard, the app's entry point). |
+| `shared` | `data` (storage, sessions, decoders), `di` (Koin modules) and `presentation` (ViewModels and Compose Multiplatform screens), with the Android implementations (`MediaCodec`, video surface, storage, web mirror) and the iOS ones (VideoToolbox, keyboard, clipboard, the app's entry point). |
 | `app` | The Android application: activities and manifest. |
 | `iosApp` | The iOS and iPadOS application: a SwiftUI host, the keychain, and `GliffSSH`, the ssh client. |
 
 `shared` also has a `desktop` target, which exists only for tests: it runs
 the logic and renders the screens off-device into `shared/build/screenshots`.
+
+How the layers depend on each other, and why: [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Build: Android
 
@@ -117,7 +120,7 @@ On a Mac the framework can be linked locally instead:
 ## Tests
 
 ```sh
-./gradlew :proto:jvmTest :transport:jvmTest :shared:desktopTest
+./gradlew :proto:jvmTest :domain:jvmTest :transport:jvmTest :shared:desktopTest
 ./gradlew :shared:compileKotlinIosArm64      # the iOS sources compile
 swift test --package-path iosApp/GliffSSH    # the iOS ssh client
 ```

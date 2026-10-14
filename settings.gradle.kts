@@ -17,6 +17,7 @@ dependencyResolutionManagement {
 rootProject.name = "gliff-client"
 
 include(":proto")
+include(":domain")
 include(":transport")
 include(":shared")
 include(":app")

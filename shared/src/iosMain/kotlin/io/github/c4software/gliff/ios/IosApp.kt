@@ -6,25 +6,25 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.window.ComposeUIViewController
-import io.github.c4software.gliff.client.Identity
-import io.github.c4software.gliff.client.MachineRepository
-import io.github.c4software.gliff.client.SessionController
-import io.github.c4software.gliff.client.SessionState
-import io.github.c4software.gliff.client.Sessions
-import io.github.c4software.gliff.client.SettingsRepository
-import io.github.c4software.gliff.ui.App
-import io.github.c4software.gliff.ui.GliffTheme
-import io.github.c4software.gliff.ui.SessionHost
+import io.github.c4software.gliff.data.clipboard.IosClipboard
+import io.github.c4software.gliff.data.session.SessionController
+import io.github.c4software.gliff.data.session.Sessions
+import io.github.c4software.gliff.data.session.SshBridge
+import io.github.c4software.gliff.di.appModules
+import io.github.c4software.gliff.di.iosModule
+import io.github.c4software.gliff.domain.session.SessionState
+import io.github.c4software.gliff.domain.settings.SettingsRepository
+import io.github.c4software.gliff.presentation.navigation.App
+import io.github.c4software.gliff.presentation.navigation.SessionHost
+import io.github.c4software.gliff.presentation.theme.GliffTheme
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import platform.Foundation.NSDate
+import org.koin.core.context.startKoin
 import platform.Foundation.NSLog
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
-import platform.Foundation.timeIntervalSince1970
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationDidBecomeActiveNotification
 import platform.UIKit.UIApplicationState
@@ -47,23 +47,13 @@ import platform.UIKit.setNeedsUpdateOfSupportedInterfaceOrientations
  * [MainViewController] for each window.
  */
 class IosGraph(bridge: SshBridge) {
-    internal val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private val koin = startKoin { modules(appModules(iosModule(bridge))) }.koin
+    internal val scope: CoroutineScope = koin.get()
+    private val settings: SettingsRepository = koin.get()
+    private val sessions: Sessions = koin.get()
+    private val clipboard: IosClipboard = koin.get()
 
-    private val store = UserDefaultsStore()
-    val machines = MachineRepository(store)
-    val settings = SettingsRepository(store)
-    val identity: Identity = IosIdentity(bridge)
-    private val clipboard = IosClipboard()
-
-    val sessions = Sessions(
-        machines, settings,
-        IosConnector(bridge) { NSLog("gliff-server: %@", it) },
-        scope,
-        nowMs = { (NSDate().timeIntervalSince1970 * 1000).toLong() },
-        clipboardOut = clipboard::write,
-        log = { message, cause -> NSLog("gliff: %@", if (cause == null) message else "$message: $cause") },
-        decoder = ::VideoToolboxDecoder,
-    )
+    internal val settingsState get() = settings.settings
 
     /** A phone: one window, the whole screen, which this app turns itself. */
     val phone: Boolean = UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone
@@ -143,7 +133,7 @@ fun MainViewController(
 ): UIViewController {
     val window = WindowState(graph)
     val controller = ComposeUIViewController {
-        val settings by graph.settings.settings.collectAsState()
+        val settings by graph.settingsState.collectAsState()
         val shown = window.session != null
         DisposableEffect(shown, settings.keepAwake) {
             graph.keepAwake(window, shown && settings.keepAwake)
@@ -151,7 +141,6 @@ fun MainViewController(
         }
         GliffTheme {
             App(
-                graph.machines, graph.settings, graph.identity, graph.sessions,
                 host = SessionHost(
                     turns = graph.phone,
                     onLandscape = window::landscape,
@@ -169,8 +158,8 @@ fun MainViewController(
 
 /** What one window holds besides its screen: the session it shows, and what follows from it. */
 internal class WindowState(private val graph: IosGraph) {
-    /** The session on screen, if any. */
-    var session by mutableStateOf<SessionController?>(null)
+    /** The state of the session on screen, if any. */
+    var session by mutableStateOf<StateFlow<SessionState>?>(null)
         private set
 
     private var controller: UIViewController? = null
@@ -178,7 +167,7 @@ internal class WindowState(private val graph: IosGraph) {
 
     /** Hides the mouse pointer over a private screen, whose video has the remote's own in it. */
     private val pointer = PointerHider {
-        (session?.state?.value as? SessionState.Streaming)?.stream?.headless == true
+        (session?.value as? SessionState.Streaming)?.stream?.headless == true
     }
     private val pointerInteraction = UIPointerInteraction(delegate = pointer)
 
@@ -188,7 +177,7 @@ internal class WindowState(private val graph: IosGraph) {
     }
 
     /** A session is on screen, or (null) none is any more. */
-    fun show(next: SessionController?) {
+    fun show(next: StateFlow<SessionState>?) {
         if (next === session) return
         session = next
         watching?.cancel()
@@ -198,7 +187,7 @@ internal class WindowState(private val graph: IosGraph) {
             return
         }
         // The pointer is asked for anew whenever the session changes state.
-        watching = graph.scope.launch { next.state.collect { pointerInteraction.invalidate() } }
+        watching = graph.scope.launch { next.collect { pointerInteraction.invalidate() } }
         graph.offerClipboard()
     }
 

@@ -5,7 +5,7 @@ import android.content.Intent
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
 import android.graphics.drawable.Icon
-import io.github.c4software.gliff.client.Machine
+import io.github.c4software.gliff.domain.machine.Machine
 
 /**
  * The saved machines under a long press on the launcher's icon, each one

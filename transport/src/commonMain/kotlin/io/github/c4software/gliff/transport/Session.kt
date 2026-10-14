@@ -4,17 +4,16 @@ import io.github.c4software.gliff.proto.ClientCaps
 import io.github.c4software.gliff.proto.ClientMsg
 import io.github.c4software.gliff.proto.ClipboardMsg
 import io.github.c4software.gliff.proto.EndOfStreamException
-import io.github.c4software.gliff.proto.GliffException
 import io.github.c4software.gliff.proto.FrameReader
 import io.github.c4software.gliff.proto.FrameWriter
+import io.github.c4software.gliff.proto.GliffException
 import io.github.c4software.gliff.proto.PROTOCOL_VERSION
 import io.github.c4software.gliff.proto.ProtocolException
 import io.github.c4software.gliff.proto.ServerMsg
 import io.github.c4software.gliff.proto.isIncompatible
 import kotlin.concurrent.Volatile
 import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.coroutineScope
@@ -65,6 +64,8 @@ class Session(
     private val transport: Transport,
     private val caps: ClientCaps,
     private val handler: SessionHandler,
+    /** Where the blocking reads and writes run. */
+    private val io: CoroutineDispatcher,
     /** XKB keymap text, or empty for the server's default. */
     private val keymap: String = "",
 ) {
@@ -96,7 +97,7 @@ class Session(
      * @throws IncompatibleException when retrying cannot help.
      * @throws GliffException on any other failure.
      */
-    suspend fun run(): Unit = withContext(Dispatchers.IO) {
+    suspend fun run(): Unit = withContext(io) {
         try {
             coroutineScope {
                 // A blocked read or write only ends when the stream closes.

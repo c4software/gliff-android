@@ -1,5 +1,6 @@
 package io.github.c4software.gliff.transport
 
+import io.github.c4software.gliff.domain.session.HostKeyInfo
 import io.github.c4software.gliff.proto.ByteSink
 import io.github.c4software.gliff.proto.ByteSource
 import io.github.c4software.gliff.proto.GliffException
@@ -28,9 +29,6 @@ interface Transport {
 
 /** The connection failed underneath the protocol. */
 open class TransportException(message: String, cause: Throwable? = null) : GliffException(message, cause)
-
-/** A server's host key as the user compares it: `SHA256:...`, as OpenSSH prints it. */
-data class HostKeyInfo(val algorithm: String, val fingerprint: String)
 
 /** First contact: the user has to confirm this key before it is trusted. */
 class UnknownHostKeyException(val key: HostKeyInfo) :

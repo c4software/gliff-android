@@ -66,7 +66,7 @@ jobs:
 
       # Checked before it is signed: the same tests as ci.yml.
       - name: Tests
-        run: ./gradlew :proto:jvmTest :transport:jvmTest :shared:desktopTest
+        run: ./gradlew :proto:jvmTest :domain:jvmTest :transport:jvmTest :shared:desktopTest
 
       # Written to the job's temporary directory and removed at the end: it
       # goes neither through the repository nor through the Gradle cache.

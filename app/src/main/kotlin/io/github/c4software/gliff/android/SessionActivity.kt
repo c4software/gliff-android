@@ -7,6 +7,7 @@ import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.hardware.input.InputManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.WindowManager
@@ -166,8 +167,25 @@ class SessionActivity : ComponentActivity(), KoinComponent {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) {
+            leaveDesktopWindow()
             applyImmersion()
             offerClipboard()
+        }
+    }
+
+    /** Asked once, when the window first shows: after that the user decides, through its header. */
+    private var fullScreenAsked = false
+
+    /**
+     * Opened in a desktop window with the option on, the session asks for the
+     * whole display; its bars then hide as on a phone. The header gives the
+     * window back.
+     */
+    private fun leaveDesktopWindow() {
+        if (fullScreenAsked || Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+        fullScreenAsked = true
+        if (machineId != null && viewModel.uiState.value.desktopFullScreen && inDesktopWindow) {
+            requestFullscreenMode(FULLSCREEN_MODE_REQUEST_ENTER, null)
         }
     }
 

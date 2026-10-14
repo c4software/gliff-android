@@ -24,6 +24,8 @@ data class Settings(
     val mirrorDark: Boolean = false,
     /** The secret part of the mirror's address. */
     val mirrorToken: String = "",
+    /** A session opened from a desktop window leaves it for the whole display. */
+    val desktopFullScreen: Boolean = false,
 ) {
     /**
      * The resolution the remote is held to, null when it follows the window.

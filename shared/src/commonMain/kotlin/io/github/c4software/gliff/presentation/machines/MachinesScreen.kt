@@ -1,6 +1,6 @@
 package io.github.c4software.gliff.presentation.machines
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +40,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -51,12 +56,23 @@ import io.github.c4software.gliff.presentation.settings.ResolutionPicker
 import io.github.c4software.gliff.presentation.settings.SettingsDialog
 import io.github.c4software.gliff.presentation.theme.Strings
 import io.github.c4software.gliff.presentation.theme.rememberStrings
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import org.koin.compose.viewmodel.koinViewModel
 
-/** The saved machines: open one, add, edit, remove, and show this device's key. */
+/** What a keyboard shortcut of the host asks of the list. */
+enum class MachinesCommand { Add, Options }
+
+/**
+ * The saved machines: open one, add, edit, remove, and show this device's key.
+ * `commands`: the host's keyboard shortcuts. `desktop`: the platform has
+ * desktop windows, and the options offer full screen there.
+ */
 @Composable
 fun MachinesRoute(
     onOpen: (Machine) -> Unit,
+    commands: Flow<MachinesCommand> = emptyFlow(),
+    desktop: Boolean = false,
     strings: Strings = rememberStrings(),
     viewModel: MachinesViewModel = koinViewModel(),
 ) {
@@ -65,6 +81,14 @@ fun MachinesRoute(
     var editing by remember { mutableStateOf<Machine?>(null) }
     var adding by remember { mutableStateOf(false) }
     var showKey by remember { mutableStateOf(false) }
+    LaunchedEffect(commands) {
+        commands.collect {
+            when (it) {
+                MachinesCommand.Add -> adding = true
+                MachinesCommand.Options -> showOptions = true
+            }
+        }
+    }
 
     MachinesContent(
         machines = state.machines,
@@ -85,6 +109,7 @@ fun MachinesRoute(
             settings = state.settings,
             mirrorUrls = state.mirrorUrls,
             strings = strings,
+            desktop = desktop,
             onChange = viewModel::updateSettings,
             onDismiss = { showOptions = false },
         )
@@ -172,7 +197,20 @@ private fun MachineRow(
         else -> strings.mirrorOf(machine.output.trim())
     }
     ListItem(
-        modifier = Modifier.clickable { onOpen(machine) },
+        // A right click or a long press opens the row's menu, as its button does.
+        modifier = Modifier
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                            event.changes.forEach { it.consume() }
+                            menu = true
+                        }
+                    }
+                }
+            }
+            .combinedClickable(onLongClick = { menu = true }) { onOpen(machine) },
         headlineContent = { Text(machine.address) },
         supportingContent = {
             Text("$mode · " + (machine.hostKey?.let(::shortFingerprint) ?: strings.hostKeyNotSeen))

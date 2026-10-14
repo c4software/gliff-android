@@ -23,6 +23,8 @@ data class SessionUiState(
     /** A tap clicks where it lands; off, the screen starts as a trackpad. */
     val directTouch: Boolean,
     val keepAwake: Boolean,
+    /** Opened from a desktop window, the session is to fill the display. */
+    val desktopFullScreen: Boolean = false,
     /** A browser watches the web mirror, and this screen is to go dark meanwhile. */
     val darkens: Boolean,
 )
@@ -55,6 +57,7 @@ class SessionViewModel(
         address = controller.machine?.address.orEmpty(),
         directTouch = options.directTouch,
         keepAwake = options.keepAwake,
+        desktopFullScreen = options.desktopFullScreen,
         darkens = options.httpMirror && options.mirrorDark && watched,
     )
 

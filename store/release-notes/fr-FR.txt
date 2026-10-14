@@ -1,4 +1,3 @@
-• Sur un bureau, l'en-tête de la fenêtre se fond dans l'app et porte le nom de la machine ; une session s'ouvre dans une fenêtre en paysage.
-• Avec une souris et un clavier branchés, les boutons flottants libèrent l'écran distant.
-• Le système peut ouvrir la liste des machines dans une autre fenêtre.
-• Une session quittée au mauvais moment ne garde plus sa connexion ouverte.
+• Plein écran sur un bureau : une option ouvre les machines sur tout l'écran depuis une fenêtre de bureau.
+• Raccourcis clavier dans la liste des machines, affichés par l'aide du système : Ctrl+N ajoute une machine, Ctrl+, ouvre les options.
+• Un clic droit ou un appui long sur une machine ouvre son menu.

@@ -19,6 +19,8 @@ Version shown in the screenshots: commit `e2d3a26`, before any tag
 | Icon | [`graphics/icon-512.png`](./graphics) | 512 × 512, 32-bit PNG | conforming |
 | Feature graphic | [`graphics/feature-graphic-*.png`](./graphics) | 1,024 × 500 | conforming |
 | Phone screenshots | [`screenshots/phone/en-US/`](./screenshots/phone/en-US), [`screenshots/phone/fr-FR/`](./screenshots/phone/fr-FR) | 2 to 8, 9:16 to 9:20, 1,080 × 2,400 | 4 per language, **to be retaken on a device** (see below) |
+| 10-inch tablet screenshots | [`screenshots/tablet/`](./screenshots/tablet) | up to 8, 16:9 to 9:16, 1,080 to 7,680 px a side | 4 per language, 2,560 × 1,600, drawn like the phone's |
+| Chromebook screenshots | [`screenshots/desktop/`](./screenshots/desktop) | up to 8, 16:9 or 9:16, 1,080 to 7,680 px a side | 4 per language, 1,920 × 1,080, drawn like the phone's; what a Googlebook shows |
 | Data safety | [`data-safety.md`](./data-safety.md) | form | written |
 | App content | [`app-content.md`](./app-content.md) | questionnaire | written |
 | App access | [`demo-server/`](./demo-server/README.md) | a way in for the reviewer | server written and tested, **not deployed** |
@@ -32,6 +34,8 @@ Version shown in the screenshots: commit `e2d3a26`, before any tag
 | 2 | `02-keys.png` | `02-touches.png` | The same session with the row of extra keys (Esc, Tab, Ctrl, Alt, Super…) |
 | 3 | `03-machines.png` | `03-machines.png` | The machines: a private screen, a mirror of a named output, a machine never connected to |
 | 4 | `04-options.png` | `04-options.png` | Options: scale, keyboard, touch, clipboard, keep awake, web mirror and its address |
+
+The tablet and desktop sets are the same four, landscape; the desktop's options also show full screen on a desktop.
 
 ---
 

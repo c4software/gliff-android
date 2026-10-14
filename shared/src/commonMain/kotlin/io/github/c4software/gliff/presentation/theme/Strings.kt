@@ -71,6 +71,8 @@ interface Strings {
     val clipboard: String
     val clipboardExplain: String
     val keepAwakeExplain: String
+    val desktopFullScreen: String
+    val desktopFullScreenExplain: String
 }
 
 object English : Strings {
@@ -143,6 +145,8 @@ object English : Strings {
     override val clipboardExplain = "Text copied here can be pasted on the remote, and text copied there lands on this device's clipboard."
     override val keepAwake = "Keep the screen on"
     override val keepAwakeExplain = "The device does not go to sleep while a session is on screen."
+    override val desktopFullScreen = "Full screen on a desktop"
+    override val desktopFullScreenExplain = "A machine opened from a desktop window takes the whole display. Its header gives the window back."
     override val mirrorControl = "Control from the browser"
     override val mirrorControlExplain = "The page's mouse and keyboard drive the session. The address then gives control, not just a view."
     override val mirrorDark = "Dark screen while mirrored"
@@ -219,6 +223,8 @@ object French : Strings {
     override val clipboardExplain = "Le texte copié ici se colle sur la machine distante, et le texte copié là-bas arrive dans le presse-papiers de cet appareil."
     override val keepAwake = "Désactiver la veille"
     override val keepAwakeExplain = "L'appareil ne se met pas en veille tant qu'une session est à l'écran."
+    override val desktopFullScreen = "Plein écran sur un bureau"
+    override val desktopFullScreenExplain = "Une machine ouverte depuis une fenêtre de bureau prend tout l'écran. Son en-tête la remet en fenêtre."
     override val mirrorControl = "Contrôle depuis le navigateur"
     override val mirrorControlExplain = "La souris et le clavier de la page pilotent la session. L'adresse donne alors le contrôle, plus seulement la vue."
     override val mirrorDark = "Écran noir pendant le miroir"

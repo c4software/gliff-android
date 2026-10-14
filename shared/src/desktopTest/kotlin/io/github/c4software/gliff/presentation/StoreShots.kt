@@ -41,23 +41,28 @@ import org.jetbrains.skia.EncodedImageFormat
 import org.junit.Assume
 
 /**
- * The Play listing's phone screenshots, when asked for:
+ * The Play listing's screenshots, for a phone, a tablet and a desktop, when
+ * asked for:
  *
  *     GLIFF_STORE=1 ./gradlew :shared:desktopTest --tests '*StoreShots*'
  *
- * The screens are the app's own, composed off-screen at a phone's size. The
+ * The screens are the app's own, composed off-screen at each device's size. The
  * remote desktop in the session shots is drawn here: there is no video
  * without a machine to connect to. `store/README.md` says so.
  */
 class StoreShots {
-    private val out = File("../store/screenshots/phone")
+    /** A device the listing shows: its directory under `store/screenshots`, its pixels and density. */
+    private class Form(val dir: String, val width: Int, val height: Int, val density: Float) {
+        /** Wide enough to hold the remote desktop as it is, not upright. */
+        val wide get() = width > height
+    }
 
-    private fun shot(locale: String, name: String, content: @Composable () -> Unit) {
-        val scene = ImageComposeScene(WIDTH, HEIGHT, Density(DENSITY)) { GliffTheme(content) }
+    private fun shot(form: Form, locale: String, name: String, content: @Composable () -> Unit) {
+        val scene = ImageComposeScene(form.width, form.height, Density(form.density)) { GliffTheme(content) }
         try {
             scene.render(0)
             val png = scene.render(500_000_000).encodeToData(EncodedImageFormat.PNG)!!.bytes
-            File(out, locale).apply { mkdirs() }.resolve("$name.png").writeBytes(png)
+            File("../store/screenshots/${form.dir}", locale).apply { mkdirs() }.resolve("$name.png").writeBytes(png)
         } finally {
             scene.close()
         }
@@ -74,30 +79,30 @@ class StoreShots {
         MachinesContent(machines, strings, onOpen = {}, onAdd = {}, onEdit = {}, onDelete = {}, onShowKey = {})
 
     @Composable
-    private fun Session(strings: Strings, typing: Boolean = false) = SessionContent(
-        SessionState.Streaming(StreamInfo(WIDTH, HEIGHT, WIDTH, HEIGHT, 2000, 60, null, true, "HEADLESS-2")),
+    private fun Session(form: Form, strings: Strings, typing: Boolean = false) = SessionContent(
+        SessionState.Streaming(StreamInfo(form.width, form.height, form.width, form.height, 2000, 60, null, true, "HEADLESS-2")),
         "val@workstation", strings,
         onSize = { _, _, _ -> }, onAcceptHostKey = {}, onRetry = {}, onBack = {},
         keyboardOpen = typing,
-        turns = true,
-    ) { modifier -> Desktop(modifier) }
+        turns = !form.wide,
+    ) { modifier -> Desktop(modifier, wide = form.wide) }
 
     @Test
     fun screenshots() {
         Assume.assumeTrue("set GLIFF_STORE=1 to write the store screenshots", System.getenv("GLIFF_STORE") == "1")
-        for ((locale, strings, names) in listOf(
+        for (form in FORMS) for ((locale, strings, names) in listOf(
             Triple("en-US", English, listOf("01-session", "02-keys", "03-machines", "04-options")),
             Triple("fr-FR", French, listOf("01-session", "02-touches", "03-machines", "04-options")),
         )) {
-            shot(locale, names[0]) { Session(strings) }
-            shot(locale, names[1]) { Session(strings, typing = true) }
-            shot(locale, names[2]) { Machines(strings) }
-            shot(locale, names[3]) {
+            shot(form, locale, names[0]) { Session(form, strings) }
+            shot(form, locale, names[1]) { Session(form, strings, typing = true) }
+            shot(form, locale, names[2]) { Machines(strings) }
+            shot(form, locale, names[3]) {
                 Machines(strings)
                 SettingsDialog(
                     Settings(httpMirror = true, mirrorToken = "k7f3q2mxp9"),
                     listOf("http://192.168.1.42:8765/k7f3q2mxp9/"),
-                    strings, onChange = {}, onDismiss = {},
+                    strings, desktop = form.dir == "desktop", onChange = {}, onDismiss = {},
                 )
             }
         }
@@ -121,10 +126,14 @@ class StoreShots {
     }
 
     private companion object {
-        // A 1080 x 2400 phone at 420 dpi.
-        const val WIDTH = 1080
-        const val HEIGHT = 2400
-        const val DENSITY = 2.625f
+        val FORMS = listOf(
+            // A 1080 x 2400 phone at 420 dpi.
+            Form("phone", 1080, 2400, 2.625f),
+            // A 10-inch tablet, 1280 x 800 dp, lying down.
+            Form("tablet", 2560, 1600, 2f),
+            // A desktop or Chromebook display, 1280 x 720 dp.
+            Form("desktop", 1920, 1080, 1.5f),
+        )
     }
 }
 

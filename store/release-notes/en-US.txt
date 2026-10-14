@@ -1,4 +1,3 @@
-• On a desktop, the window's header blends into the app and shows the machine's name; a session opens in a landscape window.
-• With a mouse and a keyboard plugged in, the floating buttons step aside from the remote screen.
-• The system can open the list of machines in another window.
-• A session left at the wrong moment no longer keeps its connection open.
+• Full screen on a desktop: an option opens machines over the whole display, from a desktop window.
+• Keyboard shortcuts in the list of machines, shown by the system's helper: Ctrl+N adds a machine, Ctrl+, opens the options.
+• A right click or a long press on a machine opens its menu.

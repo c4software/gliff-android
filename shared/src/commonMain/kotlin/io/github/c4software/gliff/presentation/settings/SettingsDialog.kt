@@ -36,6 +36,8 @@ fun SettingsDialog(
     /** Where the web mirror answers; null hides its options, where there is no mirror. */
     mirrorUrls: List<String>?,
     strings: Strings,
+    /** The platform has desktop windows, which a session can leave for the whole display. */
+    desktop: Boolean = false,
     onChange: (Settings) -> Unit,
     onDismiss: () -> Unit,
 ) {
@@ -66,6 +68,11 @@ fun SettingsDialog(
                 }
                 Toggle(strings.keepAwake, strings.keepAwakeExplain, settings.keepAwake) {
                     onChange(settings.copy(keepAwake = it))
+                }
+                if (desktop) {
+                    Toggle(strings.desktopFullScreen, strings.desktopFullScreenExplain, settings.desktopFullScreen) {
+                        onChange(settings.copy(desktopFullScreen = it))
+                    }
                 }
                 if (mirrorUrls != null) {
                     Toggle(strings.httpMirror, strings.httpMirrorExplain, settings.httpMirror) {

@@ -4,8 +4,9 @@ A mobile client for [gliff](https://github.com/omacom/gliff), the Hyprland
 remote desktop over SSH: an Android app, and an iPhone and iPad app built
 from the same code. It talks to an unmodified `gliff-server`.
 
-The Android app is on the
-[Play Store](https://play.google.com/store/apps/details?id=io.github.c4software.gliff).
+<p align="center">
+  <a href="https://play.google.com/store/apps/details?id=io.github.c4software.gliff"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="80" alt="Get it on Google Play"></a>
+</p>
 
 <p align="center">
   <img src="store/screenshots/phone/en-US/01-session.png" width="22%" alt="A session showing the remote desktop">

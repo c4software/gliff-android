@@ -59,9 +59,11 @@ internal fun Activity.hasMouseAndKeyboard(): Boolean {
     val keyboard = config.keyboard == Configuration.KEYBOARD_QWERTY &&
         config.hardKeyboardHidden == Configuration.HARDKEYBOARDHIDDEN_NO
     val inputs = getSystemService(InputManager::class.java) ?: return false
+    // Built in or plugged, as a Googlebook's touchpad is built in; a touch
+    // screen is no mouse. Android's own virtual devices do not count.
     val mouse = inputs.inputDeviceIds.any { id ->
         val device = InputDevice.getDevice(id)
-        device != null && device.isExternal && device.supportsSource(InputDevice.SOURCE_MOUSE)
+        device != null && !device.isVirtual && device.supportsSource(InputDevice.SOURCE_MOUSE)
     }
     return keyboard && mouse
 }

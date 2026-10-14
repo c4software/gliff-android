@@ -1,3 +1,1 @@
-• Full screen on a desktop: an option opens machines over the whole display, from a desktop window.
-• Keyboard shortcuts in the list of machines, shown by the system's helper: Ctrl+N adds a machine, Ctrl+, opens the options.
-• A right click or a long press on a machine opens its menu.
+• The floating buttons now also step aside for a built-in touchpad, as on a Googlebook, and not only for a plugged-in mouse.

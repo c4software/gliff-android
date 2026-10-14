@@ -1,3 +1,1 @@
-• Plein écran sur un bureau : une option ouvre les machines sur tout l'écran depuis une fenêtre de bureau.
-• Raccourcis clavier dans la liste des machines, affichés par l'aide du système : Ctrl+N ajoute une machine, Ctrl+, ouvre les options.
-• Un clic droit ou un appui long sur une machine ouvre son menu.
+• Les boutons flottants s'effacent aussi devant un pavé tactile intégré, comme sur un Googlebook, et plus seulement devant une souris branchée.

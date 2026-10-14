@@ -118,6 +118,8 @@ expect fun SoftKeyboard(shown: Boolean, sink: KeySink)
  * A machine's remote screen, with whatever stands between the user and it.
  * `turns`: the host can lay the window on its side, which a button then
  * offers; it does so while `onLandscape` last said true.
+ * `fullScreen`: whether the window fills the display, when the host can
+ * switch it (null when it cannot); a button asks for the other with `onFullScreen`.
  * `onClose`: where nothing of the system closes a window (no back gesture, no
  * title bar), a button of the screen does.
  */
@@ -128,6 +130,8 @@ fun SessionRoute(
     onClose: (() -> Unit)? = null,
     turns: Boolean = false,
     onLandscape: (Boolean) -> Unit = {},
+    fullScreen: Boolean? = null,
+    onFullScreen: () -> Unit = {},
     strings: Strings = rememberStrings(),
 ) {
     val ui by viewModel.uiState.collectAsState()
@@ -143,6 +147,8 @@ fun SessionRoute(
         onClose = onClose,
         turns = turns,
         onLandscape = onLandscape,
+        fullScreen = fullScreen,
+        onFullScreen = onFullScreen,
         directTouch = ui.directTouch,
         layout = viewModel::layout,
         send = viewModel::send,
@@ -168,6 +174,8 @@ fun SessionContent(
     onBack: () -> Unit,
     turns: Boolean = false,
     onLandscape: (Boolean) -> Unit = {},
+    fullScreen: Boolean? = null,
+    onFullScreen: () -> Unit = {},
     directTouch: Boolean = true,
     layout: () -> KeyLayout = { KeyLayout.US },
     send: (ClientMsg) -> Unit = {},
@@ -354,6 +362,7 @@ fun SessionContent(
                             if (onClose != null) KeyButton(ICON_CLOSE, onClick = onClose)
                             KeyButton(if (direct) ICON_TRACKPAD else ICON_TOUCH) { direct = !direct }
                             if (turns) KeyButton(if (lyingDown) ICON_UPRIGHT else ICON_LYING) { lyingDown = !lyingDown }
+                            if (fullScreen != null) KeyButton(if (fullScreen) ICON_WINDOWED else ICON_FULL_SCREEN, onClick = onFullScreen)
                             KeyButton(ICON_KEYBOARD) { typing = true }
                         }
                     }
@@ -444,6 +453,8 @@ private fun KeyButton(
                 ICON_LYING -> ScreenIcon(lying = true)
                 ICON_UPRIGHT -> ScreenIcon(lying = false)
                 ICON_CLOSE -> CloseIcon()
+                ICON_FULL_SCREEN -> FullScreenIcon(entering = true)
+                ICON_WINDOWED -> FullScreenIcon(entering = false)
                 else -> Text(label, style = MaterialTheme.typography.labelLarge, maxLines = 1)
             }
         }
@@ -474,6 +485,27 @@ private fun PointingIcon(touch: Boolean) {
 }
 private const val ICON_UPRIGHT = "\u0000upright"
 private const val ICON_CLOSE = "\u0000close"
+private const val ICON_FULL_SCREEN = "\u0000fullscreen"
+private const val ICON_WINDOWED = "\u0000windowed"
+
+/** Four corners, pointing out to fill the display or in to leave it. */
+@Composable
+private fun FullScreenIcon(entering: Boolean) {
+    val color = LocalContentColor.current
+    Canvas(Modifier.size(20.dp, 20.dp)) {
+        val u = 1.dp.toPx()
+        val arm = 5f * u
+        for ((x, y) in listOf(3f to 3f, 17f to 3f, 3f to 17f, 17f to 17f)) {
+            // The corner's point: on the outside to enter, on the inside to leave.
+            val dx = if (x < 10f) 1f else -1f
+            val dy = if (y < 10f) 1f else -1f
+            val corner = if (entering) Offset(x * u, y * u) else Offset(x * u + dx * arm, y * u + dy * arm)
+            val toward = if (entering) 1f else -1f
+            drawLine(color, corner, Offset(corner.x + dx * toward * arm, corner.y), 1.5f * u)
+            drawLine(color, corner, Offset(corner.x, corner.y + dy * toward * arm), 1.5f * u)
+        }
+    }
+}
 
 @Composable
 private fun CloseIcon() {

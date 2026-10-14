@@ -6,15 +6,18 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.content.res.Configuration
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.os.OutcomeReceiver
 import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -66,9 +70,12 @@ class SessionActivity : ComponentActivity(), KoinComponent {
     private var touches by mutableIntStateOf(0)
     private var waking = false
 
+    /** The desktop window was made to fill the display, by its button; the button can give it back. */
+    private var fullScreen by mutableStateOf(false)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        WindowCompat.setDecorFitsSystemWindows(window, false)
         val id = intent.data?.lastPathSegment
         if (id == null) {
             finish()
@@ -103,6 +110,8 @@ class SessionActivity : ComponentActivity(), KoinComponent {
                     }
                 }
             }
+            // A desktop window has a caption bar; a split or full screen one has none.
+            val desktop = WindowInsets.captionBar.getTop(LocalDensity.current) > 0
             GliffTheme {
                 SessionRoute(
                     viewModel,
@@ -112,6 +121,13 @@ class SessionActivity : ComponentActivity(), KoinComponent {
                         landscape = it
                         applyOrientation()
                     },
+                    fullScreen = when {
+                        Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM -> null
+                        fullScreen -> true
+                        desktop -> false
+                        else -> null
+                    },
+                    onFullScreen = ::toggleFullScreen,
                 )
                 if (dark) Box(Modifier.fillMaxSize().background(Color.Black))
             }
@@ -135,6 +151,8 @@ class SessionActivity : ComponentActivity(), KoinComponent {
 
     override fun onMultiWindowModeChanged(isInMultiWindowMode: Boolean, newConfig: Configuration) {
         super.onMultiWindowModeChanged(isInMultiWindowMode, newConfig)
+        // Back in a window, however it got there.
+        if (isInMultiWindowMode) fullScreen = false
         applyImmersion()
         applyOrientation()
     }
@@ -186,6 +204,26 @@ class SessionActivity : ComponentActivity(), KoinComponent {
             landscape -> ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             else -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         }
+    }
+
+    /**
+     * A desktop window fills the display, its bars hidden as on a phone, or
+     * goes back to where it was. Only a window that the button made full
+     * screen can be given back, hence [fullScreen].
+     */
+    private fun toggleFullScreen() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+        val entering = !fullScreen
+        requestFullscreenMode(
+            if (entering) FULLSCREEN_MODE_REQUEST_ENTER else FULLSCREEN_MODE_REQUEST_EXIT,
+            object : OutcomeReceiver<Void, Throwable> {
+                override fun onResult(result: Void?) {
+                    fullScreen = entering
+                }
+
+                override fun onError(error: Throwable) {}
+            },
+        )
     }
 
     /**

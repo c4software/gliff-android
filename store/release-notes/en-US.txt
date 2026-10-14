@@ -1,3 +1,2 @@
-• The remote desktop's resolution is yours to choose, for every machine or for one: the window's, a usual one, or any other typed by hand.
-• Web mirror: the desktop takes the size of the browser's window, with a row of keys (Esc, Tab, Ctrl, Alt, Super, full screen) to put on any edge.
-• Shortcuts to the machines under a long press on the icon, and an adaptive icon.
+• In a desktop window, a button puts the session full screen, without the bars, and back.
+• Drawing behind the system bars no longer relies on APIs that Android 15 deprecates.

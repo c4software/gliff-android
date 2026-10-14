@@ -1,3 +1,2 @@
-• Résolution du bureau distant au choix, pour toutes les machines ou pour une seule : celle de la fenêtre, une résolution courante ou une autre saisie à la main.
-• Miroir web : le bureau prend la taille de la fenêtre du navigateur, avec une barre de touches (Esc, Tab, Ctrl, Alt, Super, plein écran) à placer sur un bord.
-• Raccourcis vers les machines sur l'appui long de l'icône, et icône adaptative.
+• Dans une fenêtre de bureau, un bouton passe la session en plein écran, sans les barres, et l'en fait sortir.
+• L'affichage sous les barres système ne passe plus par des API qu'Android 15 rend obsolètes.

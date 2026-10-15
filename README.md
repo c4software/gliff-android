@@ -6,6 +6,7 @@ from the same code. It talks to an unmodified `gliff-server`.
 
 <p align="center">
   <a href="https://play.google.com/store/apps/details?id=io.github.c4software.gliff"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="80" alt="Get it on Google Play"></a>
+  <a href="#build-iphone-and-ipad"><img src="store/graphics/ios-build-badge.svg" height="80" alt="Build it for iPhone and iPad"></a>
 </p>
 
 <p align="center">

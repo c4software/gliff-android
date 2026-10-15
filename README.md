@@ -105,16 +105,48 @@ The iOS app is not on the App Store or TestFlight: to use it, build it and
 install it on your own device. Remember that it has not been run on a device
 yet (see [Status](#status)).
 
-`scripts/build-ios.sh` goes through the steps below interactively: it checks
-the tools, offers to install what it can, asks for a bundle ID, gets the
-Kotlin framework for the current commit and installs the app. Running it
-again only rebuilds and reinstalls. What it does, by hand:
-
 There is no Xcode project: `iosApp` is an [xtool](https://xtool.sh) project,
 built and installed from Linux (or WSL). There is no simulator outside a Mac,
 so it goes to a real iPhone or iPad, iOS 17 or later, over USB.
 
-### 1. Tools, once
+### With the script
+
+```sh
+scripts/build-ios.sh
+```
+
+Have ready:
+
+- the Swift toolchain (the version
+  [xtool's guide](https://xtool.sh/documentation/xtooldocs/installation-linux)
+  names), from [swift.org](https://swift.org/install/linux): the script
+  cannot install it;
+- an Apple account, and `Xcode.xip` downloaded in a browser from
+  [developer.apple.com](https://developer.apple.com/download/all/?q=Xcode)
+  (several GB), for the first run;
+- [`gh`](https://cli.github.com) and a GitHub account;
+- the device and a USB cable.
+
+The script then does the following, asking along the way:
+
+1. It checks the tools, offers to install `usbmuxd` (pacman or apt) and xtool
+   (into `~/.local/bin`), logs `gh` in, and runs `xtool setup` when the iOS
+   SDK is missing.
+2. It asks for a bundle ID of your Apple account, and keeps it in
+   `iosApp/.bundle-id` (not versioned; delete it to choose again).
+3. It gets `Shared.xcframework` for the current commit: the one already
+   there, the one GitHub is building, or, when none exists, it offers to push
+   a tag `ios-build-<commit>` to `origin` to build one, or to take the last
+   one built.
+4. It runs `xtool dev`, and offers to run it again when it stops, which it
+   often does the first time a device is used.
+
+Run it again after a change, or every 7 days with a free Apple account: the
+steps already done are skipped, so it only rebuilds and reinstalls.
+
+### By hand
+
+#### 1. Tools, once
 
 Following [xtool's guide](https://xtool.sh/documentation/xtooldocs/installation-linux):
 
@@ -145,7 +177,7 @@ At login, "API Key" needs a paid Apple Developer Program membership;
 free account, the app stops opening after 7 days: run `xtool dev` again to
 sign it anew.
 
-### 2. Bundle ID
+#### 2. Bundle ID
 
 An app ID belongs to one Apple account: `io.github.c4software.gliff` is
 taken. Put one of yours in `iosApp/xtool.yml`, for example:
@@ -154,7 +186,7 @@ taken. Put one of yours in `iosApp/xtool.yml`, for example:
 bundleID: com.example.gliff
 ```
 
-### 3. The Kotlin framework
+#### 3. The Kotlin framework
 
 The Kotlin side reaches the app as `Shared.xcframework`, which is not in the
 repository. Kotlin compiles the iOS targets anywhere but only links a
@@ -175,7 +207,7 @@ On a Mac, the framework can be linked locally instead:
 `./gradlew :shared:assembleSharedReleaseXCFramework`, then copy
 `shared/build/XCFrameworks/release/Shared.xcframework` to `iosApp/Frameworks`.
 
-### 4. Build and install
+#### 4. Build and install
 
 Plug the device in over USB, then:
 

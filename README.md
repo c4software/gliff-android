@@ -105,6 +105,11 @@ The iOS app is not on the App Store or TestFlight: to use it, build it and
 install it on your own device. Remember that it has not been run on a device
 yet (see [Status](#status)).
 
+`scripts/build-ios.sh` goes through the steps below interactively: it checks
+the tools, offers to install what it can, asks for a bundle ID, gets the
+Kotlin framework for the current commit and installs the app. Running it
+again only rebuilds and reinstalls. What it does, by hand:
+
 There is no Xcode project: `iosApp` is an [xtool](https://xtool.sh) project,
 built and installed from Linux (or WSL). There is no simulator outside a Mac,
 so it goes to a real iPhone or iPad, iOS 17 or later, over USB.

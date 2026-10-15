@@ -25,5 +25,7 @@ gh run download "$run" --name Shared.xcframework --dir "$tmp"
 mkdir -p iosApp/Frameworks
 rm -rf iosApp/Frameworks/Shared.xcframework
 unzip -q "$tmp/Shared.xcframework.zip" -d iosApp/Frameworks
+# The commit it was built from, for scripts/build-ios.sh.
+gh run view "$run" --json headSha --jq .headSha >iosApp/Frameworks/commit
 echo "iosApp/Frameworks/Shared.xcframework is the one of run $run:"
 gh run view "$run" --json headBranch,headSha,createdAt --jq '"  \(.headBranch) \(.headSha[0:7]) \(.createdAt)"'

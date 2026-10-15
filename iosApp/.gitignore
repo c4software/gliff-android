@@ -2,6 +2,8 @@
 /GliffSSH/.build/
 # Downloaded by scripts/fetch-ios-framework.sh.
 /Frameworks/
+# Your own bundle ID, kept by scripts/build-ios.sh.
+/.bundle-id
 # What xtool builds and keeps.
 /xtool/
 /.bsp/

@@ -144,7 +144,8 @@ The script then does the following, asking along the way:
 Run it again after a change, or every 7 days with a free Apple account: the
 steps already done are skipped, so it only rebuilds and reinstalls.
 
-### By hand
+<details>
+<summary><b>By hand</b>: the same steps, without the script</summary>
 
 #### 1. Tools, once
 
@@ -226,6 +227,8 @@ The first build takes a few minutes. The first time a device is used:
   in Settings > General > VPN & Device Management, under your Apple account.
 
 `xtool dev` again rebuilds and reinstalls after a change.
+
+</details>
 
 ## Tests
 

@@ -100,26 +100,94 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 ## Build: iPhone and iPad
 
-There is no Xcode project: `iosApp` is an [xtool](https://xtool.sh) project,
-built and installed from Linux. It needs Swift, xtool with the iOS SDK (which
-xtool makes from an `Xcode.xip`, once, with an Apple account), and a real
-device: there is no simulator outside a Mac.
+The iOS app is not on the App Store or TestFlight: to use it, build it and
+install it on your own device. Remember that it has not been run on a device
+yet (see [Status](#status)).
 
-The Kotlin side reaches the app as `Shared.xcframework`. Kotlin compiles the
-iOS targets anywhere but only links a framework on a Mac, so that one step
-runs on GitHub (`.github/workflows/ios-framework.yml`, a macOS runner) and
-its result is downloaded:
+There is no Xcode project: `iosApp` is an [xtool](https://xtool.sh) project,
+built and installed from Linux (or WSL). There is no simulator outside a Mac,
+so it goes to a real iPhone or iPad, iOS 17 or later, over USB.
+
+### 1. Tools, once
+
+Following [xtool's guide](https://xtool.sh/documentation/xtooldocs/installation-linux):
+
+- the Swift toolchain (the version xtool's guide names), from
+  [swift.org](https://swift.org/install/linux);
+- `usbmuxd`, to reach the device over USB (on Arch, `pacman -S usbmuxd`);
+- `Xcode.xip`, downloaded in a browser from
+  [developer.apple.com](https://developer.apple.com/download/all/?q=Xcode)
+  with an Apple account;
+- xtool itself, an AppImage:
+
+  ```sh
+  curl -fL "https://github.com/xtool-org/xtool/releases/latest/download/xtool-$(uname -m).AppImage" -o xtool
+  chmod +x xtool && sudo mv xtool /usr/local/bin/
+  ```
+
+- the `gh` command, logged in (`gh auth login`), to fetch the framework below.
+
+Then:
 
 ```sh
-git tag ios-try-1 && git push origin ios-try-1   # any ios-* tag builds one
-scripts/fetch-ios-framework.sh        # into iosApp/Frameworks, needs gh
-cd iosApp
-xtool dev                             # build, sign, install and launch
+xtool setup      # logs in to Apple, then asks for the path to Xcode.xip
+swift sdk list   # should list darwin
 ```
 
-On a Mac the framework can be linked locally instead:
+At login, "API Key" needs a paid Apple Developer Program membership;
+"Password" works with any Apple account, through private Apple APIs. With a
+free account, the app stops opening after 7 days: run `xtool dev` again to
+sign it anew.
+
+### 2. Bundle ID
+
+An app ID belongs to one Apple account: `io.github.c4software.gliff` is
+taken. Put one of yours in `iosApp/xtool.yml`, for example:
+
+```yaml
+bundleID: com.example.gliff
+```
+
+### 3. The Kotlin framework
+
+The Kotlin side reaches the app as `Shared.xcframework`, which is not in the
+repository. Kotlin compiles the iOS targets anywhere but only links a
+framework on a Mac, so that step runs on GitHub
+(`.github/workflows/ios-framework.yml`, a macOS runner, about 25 minutes),
+on any tag that starts with `ios-`:
+
+```sh
+git tag ios-try-1 && git push origin ios-try-1
+scripts/fetch-ios-framework.sh   # the last successful run, into iosApp/Frameworks
+```
+
+The framework has to come from the same commit as the Swift sources: the
+script prints the commit it took. From a fork, enable Actions on the fork,
+push the tag there, and point `gh` at it first (`gh repo set-default`).
+
+On a Mac, the framework can be linked locally instead:
 `./gradlew :shared:assembleSharedReleaseXCFramework`, then copy
 `shared/build/XCFrameworks/release/Shared.xcframework` to `iosApp/Frameworks`.
+
+### 4. Build and install
+
+Plug the device in over USB, then:
+
+```sh
+cd iosApp
+xtool dev        # builds, signs, installs and launches
+```
+
+The first build takes a few minutes. The first time a device is used:
+
+- tap **Trust** on the device and enter its passcode; if `xtool dev` then
+  stops with an error, run it again;
+- if it asks for **Developer Mode**, turn it on in Settings > Privacy &
+  Security > Developer Mode (the device restarts), then run `xtool dev` again;
+- with a free account, the first launch says "Untrusted Developer": allow it
+  in Settings > General > VPN & Device Management, under your Apple account.
+
+`xtool dev` again rebuilds and reinstalls after a change.
 
 ## Tests
 
